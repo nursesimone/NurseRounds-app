@@ -113,29 +113,58 @@ export default function VisitDetailPage() {
       y += lineHeight * Math.max(1, splitText.length);
     };
 
-    // Header
-    doc.setFontSize(20);
+    // Get visit type label
+    const getVisitTypeLabel = (type) => {
+      switch (type) {
+        case 'nurse_visit': return 'Routine Nurse Visit';
+        case 'vitals_only': return 'Vital Signs';
+        case 'daily_note': return 'Daily Note';
+        default: return 'Visit Report';
+      }
+    };
+
+    // ============ HEADER WITH BUSINESS NAME ============
+    // Business/Organization Name as main heading
+    const businessName = visit?.organization || 'MedRounds';
+    doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(15, 118, 110);
-    doc.text('MedRounds', margin, y);
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text('Home Nurse Visit Report', margin, y + 6);
-    y += 20;
+    doc.text(businessName, pageWidth / 2, y, { align: 'center' });
+    y += 12;
+
+    // Report Type
+    const reportType = getVisitTypeLabel(visit?.visit_type);
+    doc.setFontSize(14);
+    doc.setTextColor(60);
+    doc.text(reportType, pageWidth / 2, y, { align: 'center' });
+    y += 8;
+
+    // Resident Name
+    doc.setFontSize(16);
+    doc.setTextColor(0);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Resident: ${patient?.full_name}`, pageWidth / 2, y, { align: 'center' });
+    y += 6;
+
+    // Divider line
+    doc.setDrawColor(15, 118, 110);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 10;
+
+    // Visit Date
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0);
+    doc.text(`Visit Date: ${formatDateTime(visit?.visit_date)}`, margin, y);
+    y += lineHeight * 2;
 
     // Patient Info
     doc.setTextColor(0);
-    addTitle('Patient Information');
-    addField('Name', patient?.full_name);
+    addSectionTitle('Patient Information');
     addField('Date of Birth', formatDate(patient?.permanent_info?.date_of_birth));
     addField('Gender', patient?.permanent_info?.gender);
     addField('Address', patient?.permanent_info?.home_address);
-    y += 5;
-
-    // Visit Info
-    addSectionTitle('Visit Information');
-    addField('Visit Date', formatDateTime(visit?.visit_date));
-    addField('Health Status', visit?.overall_health_status);
     y += 5;
 
     // Vital Signs
