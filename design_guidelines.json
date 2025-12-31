@@ -1,0 +1,193 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "Clinical Zen",
+      "description": "A professional, calming, and high-efficiency interface for home health nurses. It balances medical precision with human warmth.",
+      "archetype": "Organic & Earthy (Trust, Growth, Calm)",
+      "emotional_tone": "Efficient, Reassuring, Professional, Clean"
+    },
+    "typography": {
+      "font_family": {
+        "headings": "Manrope, sans-serif",
+        "body": "Public Sans, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "weights": {
+        "light": 300,
+        "regular": 400,
+        "medium": 500,
+        "bold": 700,
+        "black": 900
+      },
+      "scale": {
+        "h1": "text-4xl md:text-5xl font-bold tracking-tight",
+        "h2": "text-3xl font-bold tracking-tight",
+        "h3": "text-2xl font-semibold tracking-tight",
+        "h4": "text-xl font-semibold",
+        "body_lg": "text-lg leading-relaxed",
+        "body_base": "text-base leading-relaxed",
+        "caption": "text-sm text-muted-foreground",
+        "mono_data": "font-mono text-sm tracking-wide"
+      }
+    },
+    "colors": {
+      "palette": {
+        "primary": {
+          "DEFAULT": "#0F766E",
+          "foreground": "#FFFFFF",
+          "description": "Teal 700 - Deep, surgical green for primary actions and branding."
+        },
+        "secondary": {
+          "DEFAULT": "#F0FDFA",
+          "foreground": "#0F766E",
+          "description": "Teal 50 - Very light wash for backgrounds and secondary containers."
+        },
+        "accent": {
+          "DEFAULT": "#F43F5E",
+          "foreground": "#FFFFFF",
+          "description": "Rose 500 - For alerts, abnormal vitals, and critical errors."
+        },
+        "background": {
+          "DEFAULT": "#F8FAFC",
+          "description": "Slate 50 - 'Paper White' to reduce eye strain compared to pure white."
+        },
+        "surface": {
+          "DEFAULT": "#FFFFFF",
+          "description": "Pure white for cards and input fields."
+        },
+        "text": {
+          "primary": "#0F172A",
+          "secondary": "#64748B",
+          "muted": "#94A3B8"
+        }
+      },
+      "gradients": {
+        "subtle_glow": "bg-gradient-to-br from-teal-50 to-slate-50",
+        "active_state": "bg-gradient-to-r from-teal-600 to-teal-700"
+      }
+    },
+    "spacing": {
+      "container_padding": "p-6 md:p-8 lg:p-12",
+      "section_gap": "gap-8 md:gap-12",
+      "component_gap": "gap-4",
+      "radius": {
+        "default": "rounded-xl",
+        "card": "rounded-2xl",
+        "button": "rounded-lg"
+      }
+    },
+    "shadows": {
+      "card": "shadow-[0_2px_8px_rgba(15,23,42,0.04)]",
+      "card_hover": "shadow-[0_12px_24px_rgba(15,23,42,0.08)]",
+      "float": "shadow-[0_20px_40px_rgba(15,23,42,0.12)]"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8 rounded-lg font-medium transition-all active:scale-95 shadow-sm",
+      "secondary": "bg-white text-primary border border-input hover:bg-secondary/50 h-11 px-8 rounded-lg font-medium transition-all",
+      "ghost": "hover:bg-secondary/50 text-slate-600 hover:text-primary h-10 px-4 rounded-lg transition-colors",
+      "destructive": "bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 h-11 px-8 rounded-lg font-medium"
+    },
+    "cards": {
+      "base": "bg-white border border-slate-100 rounded-2xl shadow-sm p-6 transition-all hover:border-teal-100",
+      "interactive": "bg-white border border-slate-100 rounded-2xl shadow-sm p-6 cursor-pointer hover:shadow-md hover:border-teal-200 transition-all group",
+      "metric": "bg-white border border-slate-100 rounded-2xl p-6 flex flex-col justify-between h-full relative overflow-hidden"
+    },
+    "inputs": {
+      "base": "flex h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all",
+      "label": "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-700 mb-2 block"
+    },
+    "badges": {
+      "success": "inline-flex items-center rounded-full border border-emerald-200 px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-emerald-700 bg-emerald-50",
+      "warning": "inline-flex items-center rounded-full border border-amber-200 px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-amber-700 bg-amber-50",
+      "error": "inline-flex items-center rounded-full border border-rose-200 px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-rose-700 bg-rose-50",
+      "neutral": "inline-flex items-center rounded-full border border-slate-200 px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-slate-600 bg-slate-50"
+    }
+  },
+  "layout_strategies": {
+    "dashboard": {
+      "type": "Bento Grid (Mode B)",
+      "grid_cols": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4",
+      "gap": "gap-6",
+      "description": "Dense, data-rich layout for patient lists and summaries."
+    },
+    "patient_profile": {
+      "type": "Split View",
+      "structure": "Left sidebar (30%) for Permanent Info, Right content (70%) for Visit History/New Visit.",
+      "mobile_behavior": "Stack vertically, Permanent Info becomes a collapsible drawer."
+    },
+    "assessment_form": {
+      "type": "Wizard / Sectioned",
+      "structure": "Single column, focused sections. Use 'Accordion' or 'Tabs' to manage the long 'Head-to-Toe' assessment list without scrolling fatigue."
+    }
+  },
+  "assets": {
+    "images": {
+      "login_hero": {
+        "url": "https://images.pexels.com/photos/7852543/pexels-photo-7852543.jpeg",
+        "alt": "Minimalist medical workspace with stethoscope",
+        "usage": "Split screen login page, right side cover image."
+      },
+      "nurse_avatar_placeholder": {
+        "url": "https://images.unsplash.com/photo-1581579438930-a0269719fde7?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Nurse profile placeholder",
+        "usage": "Default avatar for nurse profiles."
+      },
+      "patient_avatar_placeholder": {
+        "url": "https://images.unsplash.com/photo-1675179182818-e3518274be24?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Elderly patient placeholder",
+        "usage": "Default avatar for patient profiles."
+      },
+      "empty_state": {
+        "url": "https://images.unsplash.com/photo-1606618871497-d848be8dc159?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Empty medical table",
+        "usage": "Background or illustration for empty lists."
+      }
+    },
+    "icons": {
+      "library": "lucide-react",
+      "style": "Stroke width 1.5px (Light/Elegant)",
+      "key_icons": [
+        "Activity (Vitals)",
+        "User (Patient)",
+        "ClipboardList (Visits)",
+        "Pill (Medications)",
+        "Stethoscope (Assessment)",
+        "FileText (Reports)",
+        "LogOut (Auth)"
+      ]
+    }
+  },
+  "instructions_to_main_agent": {
+    "general": [
+      "Implement the 'Clinical Zen' theme using the specified color palette.",
+      "Use 'Manrope' for all headings and 'Public Sans' for body text.",
+      "Ensure all forms are touch-friendly (min height 44px for inputs).",
+      "Use Shadcn components as the base but override styles to match the 'Clinical Zen' aesthetic (rounded-xl, soft shadows).",
+      "Strictly follow the 'Bento Grid' layout for the dashboard.",
+      "Implement the 'Split View' for the patient profile page.",
+      "Use 'sonner' for all toast notifications.",
+      "Add 'data-testid' to all interactive elements."
+    ],
+    "specific_pages": {
+      "login": "Create a split-screen login page. Left side form, right side 'login_hero' image with a teal overlay.",
+      "dashboard": "Display a list of assigned patients. Use cards with 'patient_avatar_placeholder' and key status indicators.",
+      "patient_profile": "Show permanent info (Race, Gender, DOB, etc.) in a sticky sidebar (or top card on mobile). Main area shows 'Visit History' and 'New Visit' button.",
+      "new_visit_form": "Break this into steps: 1. Vitals, 2. Physical Assessment (Head-to-Toe), 3. Systems (GI/GU/Resp), 4. Changes & Plan. Use Accordions for the long assessment sections.",
+      "pdf_report": "Ensure the print layout is clean and removes UI elements (sidebar, buttons)."
+    },
+    "accessibility": [
+      "Ensure contrast ratios meet WCAG AA standards (4.5:1 for normal text).",
+      "Use semantic HTML (h1-h6, button, input).",
+      "Support keyboard navigation for all forms."
+    ]
+  },
+  "universal_guidelines": [
+    "Do not use generic 'Bootstrap' styles. Use the custom 'Clinical Zen' classes.",
+    "Avoid full-screen gradients. Use subtle 'subtle_glow' gradients only.",
+    "Use 'lucide-react' for icons.",
+    "Always handle loading and error states gracefully.",
+    "Mock API calls where necessary if backend is not ready, but structure them to be easily replaced."
+  ]
+}
