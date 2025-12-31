@@ -309,7 +309,7 @@ export default function PatientDetailPage() {
                             value={profileData.height || ''}
                             onChange={(e) => handleProfileChange('height', e.target.value)}
                             className="mt-1"
-                            placeholder="e.g., 5'8\""
+                            placeholder="e.g., 5ft 8in"
                           />
                         ) : (
                           <p className="text-slate-900">{profileData.height || 'Not set'}</p>
