@@ -411,6 +411,87 @@ async def delete_visit(visit_id: str, nurse: dict = Depends(get_current_nurse)):
         raise HTTPException(status_code=404, detail="Visit not found")
     return {"message": "Visit deleted successfully"}
 
+# ==================== MONTHLY REPORTS ====================
+class MonthlyReportRequest(BaseModel):
+    year: int
+    month: int
+    patient_id: Optional[str] = None  # Optional: filter by specific patient
+    organization: Optional[str] = None  # Optional: filter by organization
+
+@api_router.post("/reports/monthly")
+async def get_monthly_report(data: MonthlyReportRequest, nurse: dict = Depends(get_current_nurse)):
+    from datetime import date
+    import calendar
+    
+    # Calculate date range
+    _, last_day = calendar.monthrange(data.year, data.month)
+    start_date = f"{data.year}-{data.month:02d}-01"
+    end_date = f"{data.year}-{data.month:02d}-{last_day:02d}"
+    
+    # Check if it's current month - use today's date as end
+    today = date.today()
+    if data.year == today.year and data.month == today.month:
+        end_date = today.isoformat()
+    
+    # Build query
+    query = {
+        "nurse_id": nurse["id"],
+        "visit_date": {"$gte": start_date, "$lte": end_date + "T23:59:59"}
+    }
+    
+    if data.patient_id:
+        query["patient_id"] = data.patient_id
+    
+    if data.organization:
+        query["organization"] = data.organization
+    
+    # Get visits
+    visits = await db.visits.find(query, {"_id": 0}).sort("visit_date", 1).to_list(10000)
+    
+    # Get patient info for each visit
+    patient_ids = list(set(v["patient_id"] for v in visits))
+    patients = await db.patients.find({"id": {"$in": patient_ids}}, {"_id": 0}).to_list(1000)
+    patient_map = {p["id"]: p for p in patients}
+    
+    # Group visits by type
+    visits_by_type = {
+        "nurse_visit": [],
+        "vitals_only": [],
+        "daily_note": []
+    }
+    
+    for visit in visits:
+        visit_type = visit.get("visit_type", "nurse_visit")
+        visit["patient_name"] = patient_map.get(visit["patient_id"], {}).get("full_name", "Unknown")
+        if visit_type in visits_by_type:
+            visits_by_type[visit_type].append(visit)
+        else:
+            visits_by_type["nurse_visit"].append(visit)
+    
+    # Summary stats
+    summary = {
+        "period": f"{data.year}-{data.month:02d}",
+        "start_date": start_date,
+        "end_date": end_date,
+        "total_visits": len(visits),
+        "nurse_visits": len(visits_by_type["nurse_visit"]),
+        "vitals_only": len(visits_by_type["vitals_only"]),
+        "daily_notes": len(visits_by_type["daily_note"]),
+        "unique_patients": len(patient_ids),
+        "by_organization": {}
+    }
+    
+    # Count by organization
+    for visit in visits:
+        org = visit.get("organization") or "Unspecified"
+        summary["by_organization"][org] = summary["by_organization"].get(org, 0) + 1
+    
+    return {
+        "summary": summary,
+        "visits": visits,
+        "visits_by_type": visits_by_type
+    }
+
 # ==================== HEALTH CHECK ====================
 @api_router.get("/")
 async def root():
