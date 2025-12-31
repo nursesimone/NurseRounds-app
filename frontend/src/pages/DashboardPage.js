@@ -25,7 +25,8 @@ import {
   Calendar,
   User,
   ChevronRight,
-  ClipboardList
+  ClipboardList,
+  ArrowLeft
 } from 'lucide-react';
 import { toast } from 'sonner';
 
