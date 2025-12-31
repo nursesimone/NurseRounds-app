@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { Label } from '../components/ui/label';
+import { Input } from '../components/ui/input';
 import { 
   Stethoscope, 
   Activity, 
@@ -21,15 +22,22 @@ export default function VisitTypePage() {
   const navigate = useNavigate();
   const [visitType, setVisitType] = useState('');
   const [organization, setOrganization] = useState('');
+  const [customOrganization, setCustomOrganization] = useState('');
 
   const handleProceed = () => {
     if (visitType === 'nurse_visit' && !organization) {
       return; // Need organization for nurse visit
     }
     
+    if (organization === 'Other' && !customOrganization.trim()) {
+      return; // Need custom org name if Other is selected
+    }
+    
     // Store selection in sessionStorage for the visit form to use
     sessionStorage.setItem('visitType', visitType);
-    sessionStorage.setItem('organization', organization);
+    // Use custom organization name if "Other" is selected
+    const orgName = organization === 'Other' ? customOrganization.trim() : organization;
+    sessionStorage.setItem('organization', orgName);
     
     // Navigate to dashboard to select patient
     navigate('/dashboard');
@@ -167,16 +175,34 @@ export default function VisitTypePage() {
                 <CardTitle className="text-lg">Select Organization</CardTitle>
                 <CardDescription>Choose the organization for this nurse visit</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Select value={organization} onValueChange={setOrganization}>
+              <CardContent className="space-y-4">
+                <Select value={organization} onValueChange={(val) => {
+                  setOrganization(val);
+                  if (val !== 'Other') setCustomOrganization('');
+                }}>
                   <SelectTrigger className="h-12" data-testid="organization-select">
                     <SelectValue placeholder="Select organization..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="POSH-Able Living">POSH-Able Living</SelectItem>
-                    <SelectItem value="Ebenezer Private Home Care">Ebenezer Private Home Care</SelectItem>
+                    <SelectItem value="Ebenezer Private HomeCare">Ebenezer Private HomeCare</SelectItem>
+                    <SelectItem value="Other">Other (Enter custom name)</SelectItem>
                   </SelectContent>
                 </Select>
+                
+                {organization === 'Other' && (
+                  <div className="animate-fade-in">
+                    <Label htmlFor="customOrg">Business Name</Label>
+                    <Input
+                      id="customOrg"
+                      value={customOrganization}
+                      onChange={(e) => setCustomOrganization(e.target.value)}
+                      placeholder="Enter business/organization name"
+                      className="mt-1 h-12"
+                      data-testid="custom-org-input"
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -186,7 +212,7 @@ export default function VisitTypePage() {
             <Button 
               className="h-12 px-8 bg-teal-700 hover:bg-teal-600"
               onClick={handleProceed}
-              disabled={!visitType || (visitType === 'nurse_visit' && !organization)}
+              disabled={!visitType || (visitType === 'nurse_visit' && !organization) || (organization === 'Other' && !customOrganization.trim())}
               data-testid="proceed-btn"
             >
               Select Patient
