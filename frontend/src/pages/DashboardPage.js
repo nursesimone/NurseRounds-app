@@ -39,6 +39,19 @@ export default function DashboardPage() {
   const [newPatientName, setNewPatientName] = useState('');
   const [addingPatient, setAddingPatient] = useState(false);
 
+  // Get visit type from session
+  const visitType = sessionStorage.getItem('visitType') || 'nurse_visit';
+  const organization = sessionStorage.getItem('organization') || '';
+
+  const getVisitTypeLabel = () => {
+    switch (visitType) {
+      case 'nurse_visit': return 'Nurse Visit';
+      case 'vitals_only': return 'Vitals Only';
+      case 'daily_note': return "Resident's Daily Note";
+      default: return 'Visit';
+    }
+  };
+
   useEffect(() => {
     fetchPatients();
   }, []);
