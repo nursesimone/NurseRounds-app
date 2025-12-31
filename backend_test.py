@@ -353,6 +353,119 @@ class NurseVisitAPITester:
             self.log_test("Delete Visit", False, f"Status: {status}, Response: {response}")
             return False
 
+    def test_create_different_visit_types(self):
+        """Test creating different types of visits (nurse_visit, vitals_only, daily_note)"""
+        if not self.token or not self.patient_id:
+            self.log_test("Create Different Visit Types", False, "No token or patient ID available")
+            return False
+
+        # Test nurse visit with organization
+        nurse_visit_data = {
+            "visit_type": "nurse_visit",
+            "organization": "POSH-Able Living",
+            "visit_date": datetime.now().isoformat(),
+            "vital_signs": {
+                "weight": "175",
+                "body_temperature": "98.4",
+                "blood_pressure_systolic": "125",
+                "blood_pressure_diastolic": "82",
+                "pulse": "68",
+                "respirations": "14"
+            },
+            "overall_health_status": "Stable",
+            "nurse_notes": "Comprehensive nursing assessment completed."
+        }
+        
+        success1, response1, status1 = self.make_request('POST', f'patients/{self.patient_id}/visits', nurse_visit_data, 200)
+        
+        # Test vitals only visit
+        vitals_visit_data = {
+            "visit_type": "vitals_only",
+            "visit_date": datetime.now().isoformat(),
+            "vital_signs": {
+                "weight": "176",
+                "body_temperature": "98.2",
+                "blood_pressure_systolic": "120",
+                "blood_pressure_diastolic": "80",
+                "pulse": "70"
+            },
+            "overall_health_status": "Stable"
+        }
+        
+        success2, response2, status2 = self.make_request('POST', f'patients/{self.patient_id}/visits', vitals_visit_data, 200)
+
+        # Test daily note visit
+        daily_note_data = {
+            "visit_type": "daily_note",
+            "visit_date": datetime.now().isoformat(),
+            "daily_note_content": "Patient had a good day. Participated in activities, ate well, and was in good spirits.",
+            "vital_signs": {
+                "weight": "175"
+            }
+        }
+        
+        success3, response3, status3 = self.make_request('POST', f'patients/{self.patient_id}/visits', daily_note_data, 200)
+
+        all_success = success1 and success2 and success3
+        if all_success:
+            self.log_test("Create Different Visit Types", True)
+        else:
+            details = f"Nurse visit: {success1}, Vitals only: {success2}, Daily note: {success3}"
+            self.log_test("Create Different Visit Types", False, details)
+        
+        return all_success
+
+    def test_monthly_reports(self):
+        """Test the new monthly reports endpoint"""
+        if not self.token:
+            self.log_test("Monthly Reports", False, "No token available")
+            return False
+
+        from datetime import date
+        current_date = date.today()
+        
+        # Test basic monthly report
+        report_data = {
+            "year": current_date.year,
+            "month": current_date.month
+        }
+        
+        success1, response1, status1 = self.make_request('POST', 'reports/monthly', report_data, 200)
+        
+        # Test filtered report by patient
+        if self.patient_id:
+            filtered_report_data = {
+                "year": current_date.year,
+                "month": current_date.month,
+                "patient_id": self.patient_id
+            }
+            success2, response2, status2 = self.make_request('POST', 'reports/monthly', filtered_report_data, 200)
+        else:
+            success2 = True  # Skip if no patient
+        
+        # Test filtered report by organization
+        org_report_data = {
+            "year": current_date.year,
+            "month": current_date.month,
+            "organization": "POSH-Able Living"
+        }
+        success3, response3, status3 = self.make_request('POST', 'reports/monthly', org_report_data, 200)
+
+        all_success = success1 and success2 and success3
+        if all_success:
+            # Check response structure
+            if 'summary' in response1 and 'visits' in response1:
+                self.log_test("Monthly Reports", True)
+                print(f"   Report contains {response1['summary'].get('total_visits', 0)} visits")
+            else:
+                self.log_test("Monthly Reports", False, "Invalid response structure")
+                return False
+        else:
+            details = f"Basic: {success1}, Patient filter: {success2}, Org filter: {success3}"
+            self.log_test("Monthly Reports", False, details)
+        
+        return all_success
+
     def test_delete_patient(self):
         """Test deleting a patient"""
         if not self.token or not self.patient_id:
