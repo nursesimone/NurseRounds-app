@@ -10,25 +10,28 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Checkbox } from '../components/ui/checkbox';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion';
+import { Badge } from '../components/ui/badge';
 import { 
   Stethoscope, 
   ArrowLeft, 
   Activity,
   Heart,
   Eye,
-  Ear,
   Brain,
-  Thermometer,
   Wind,
   Droplet,
   AlertCircle,
   Save,
-  User
+  User,
+  Building2,
+  FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const initialVisitData = {
   visit_date: new Date().toISOString().split('T')[0],
+  visit_type: 'nurse_visit',
+  organization: '',
   vital_signs: {
     weight: '',
     body_temperature: '',
@@ -79,7 +82,8 @@ const initialVisitData = {
     upcoming_appointments: ''
   },
   overall_health_status: '',
-  nurse_notes: ''
+  nurse_notes: '',
+  daily_note_content: ''
 };
 
 export default function NewVisitPage() {
@@ -91,12 +95,21 @@ export default function NewVisitPage() {
   const [saving, setSaving] = useState(false);
   const [bpAbnormal, setBpAbnormal] = useState(false);
 
-  useEffect(() => {
-    fetchPatient();
-  }, [patientId]);
+  // Get visit type from session storage
+  const visitType = sessionStorage.getItem('visitType') || 'nurse_visit';
+  const organization = sessionStorage.getItem('organization') || '';
 
   useEffect(() => {
-    // Check if BP is abnormal
+    fetchPatient();
+    // Set visit type and organization from session
+    setVisitData(prev => ({
+      ...prev,
+      visit_type: visitType,
+      organization: organization
+    }));
+  }, [patientId, visitType, organization]);
+
+  useEffect(() => {
     const { blood_pressure_systolic, blood_pressure_diastolic } = visitData.vital_signs;
     const abnormal = isBloodPressureAbnormal(blood_pressure_systolic, blood_pressure_diastolic);
     setBpAbnormal(abnormal);
@@ -110,13 +123,15 @@ export default function NewVisitPage() {
       const response = await patientsAPI.get(patientId);
       setPatient(response.data);
       
-      // Pre-fill with last vitals if available
       if (response.data.last_vitals) {
         setVisitData(prev => ({
           ...prev,
           vital_signs: {
             ...prev.vital_signs,
-            ...response.data.last_vitals
+            ...response.data.last_vitals,
+            repeat_blood_pressure_systolic: '',
+            repeat_blood_pressure_diastolic: '',
+            bp_abnormal: false
           }
         }));
       }
@@ -199,6 +214,24 @@ export default function NewVisitPage() {
     }
   };
 
+  const getVisitTypeLabel = () => {
+    switch (visitType) {
+      case 'nurse_visit': return 'Nurse Visit';
+      case 'vitals_only': return 'Vitals Only';
+      case 'daily_note': return "Resident's Daily Note";
+      default: return 'Visit';
+    }
+  };
+
+  const getVisitTypeColor = () => {
+    switch (visitType) {
+      case 'nurse_visit': return 'bg-teal-50 text-teal-700 border-teal-200';
+      case 'vitals_only': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'daily_note': return 'bg-amber-50 text-amber-700 border-amber-200';
+      default: return 'bg-slate-50 text-slate-700 border-slate-200';
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -227,7 +260,10 @@ export default function NewVisitPage() {
                   <Stethoscope className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="font-bold text-slate-900">New Visit</h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="font-bold text-slate-900">{getVisitTypeLabel()}</h1>
+                    <Badge className={getVisitTypeColor()}>{visitType.replace('_', ' ')}</Badge>
+                  </div>
                   <p className="text-sm text-slate-500">{patient?.full_name}</p>
                 </div>
               </div>
@@ -248,7 +284,7 @@ export default function NewVisitPage() {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Visit Date */}
+          {/* Visit Info */}
           <Card className="bg-white border-slate-100">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -257,7 +293,7 @@ export default function NewVisitPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label>Visit Date</Label>
                   <Input
@@ -268,11 +304,26 @@ export default function NewVisitPage() {
                     data-testid="visit-date-input"
                   />
                 </div>
+                <div>
+                  <Label>Visit Type</Label>
+                  <div className={`mt-1 h-11 px-3 py-2 rounded-lg border flex items-center ${getVisitTypeColor()}`}>
+                    {getVisitTypeLabel()}
+                  </div>
+                </div>
+                {organization && (
+                  <div>
+                    <Label>Organization</Label>
+                    <div className="mt-1 h-11 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-slate-500" />
+                      {organization}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Vital Signs */}
+          {/* Vital Signs - Always shown */}
           <Card className="bg-white border-slate-100">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -355,7 +406,6 @@ export default function NewVisitPage() {
                 </div>
               </div>
 
-              {/* Repeat BP if abnormal */}
               {bpAbnormal && (
                 <div className="mt-6 p-4 bg-rose-50 border border-rose-200 rounded-xl">
                   <div className="flex items-center gap-2 text-rose-700 mb-3">
@@ -389,454 +439,470 @@ export default function NewVisitPage() {
             </CardContent>
           </Card>
 
-          {/* Physical Assessment */}
-          <Card className="bg-white border-slate-100">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <User className="w-5 h-5 text-teal-700" />
-                Physical Assessment
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>General Appearance</Label>
+          {/* Daily Note Content - Only for daily_note type */}
+          {visitType === 'daily_note' && (
+            <Card className="bg-white border-slate-100">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-amber-600" />
+                  Daily Note
+                </CardTitle>
+                <CardDescription>Record observations and notes for today</CardDescription>
+              </CardHeader>
+              <CardContent>
                 <Textarea
-                  value={visitData.physical_assessment.general_appearance}
-                  onChange={(e) => updatePhysicalAssessment('general_appearance', e.target.value)}
-                  placeholder="Describe patient's general appearance..."
-                  className="mt-1"
-                  rows={2}
-                  data-testid="general-appearance-input"
+                  value={visitData.daily_note_content}
+                  onChange={(e) => setVisitData(prev => ({ ...prev, daily_note_content: e.target.value }))}
+                  placeholder="Enter daily observations, activities, mood, appetite, sleep patterns, and any notable events..."
+                  className="min-h-[200px]"
+                  data-testid="daily-note-input"
                 />
-              </div>
-              <div>
-                <Label>Skin Assessment</Label>
-                <Textarea
-                  value={visitData.physical_assessment.skin_assessment}
-                  onChange={(e) => updatePhysicalAssessment('skin_assessment', e.target.value)}
-                  placeholder="Describe skin condition, integrity, wounds..."
-                  className="mt-1"
-                  rows={2}
-                  data-testid="skin-assessment-input"
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label>Mobility Level</Label>
-                  <Select
-                    value={visitData.physical_assessment.mobility_level}
-                    onValueChange={(value) => updatePhysicalAssessment('mobility_level', value)}
-                  >
-                    <SelectTrigger className="mt-1" data-testid="mobility-select">
-                      <SelectValue placeholder="Select level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Independent">Independent</SelectItem>
-                      <SelectItem value="Minimal Assistance">Minimal Assistance</SelectItem>
-                      <SelectItem value="Moderate Assistance">Moderate Assistance</SelectItem>
-                      <SelectItem value="Maximum Assistance">Maximum Assistance</SelectItem>
-                      <SelectItem value="Total Dependence">Total Dependence</SelectItem>
-                      <SelectItem value="Bedbound">Bedbound</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Speech Level</Label>
-                  <Select
-                    value={visitData.physical_assessment.speech_level}
-                    onValueChange={(value) => updatePhysicalAssessment('speech_level', value)}
-                  >
-                    <SelectTrigger className="mt-1" data-testid="speech-select">
-                      <SelectValue placeholder="Select level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Clear & Coherent">Clear & Coherent</SelectItem>
-                      <SelectItem value="Slurred">Slurred</SelectItem>
-                      <SelectItem value="Impaired">Impaired</SelectItem>
-                      <SelectItem value="Non-verbal">Non-verbal</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Alert & Oriented Level</Label>
-                  <Select
-                    value={visitData.physical_assessment.alert_oriented_level}
-                    onValueChange={(value) => updatePhysicalAssessment('alert_oriented_level', value)}
-                  >
-                    <SelectTrigger className="mt-1" data-testid="orientation-select">
-                      <SelectValue placeholder="Select level (0-4)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="x4 - Person, Place, Time, Situation">x4 - Person, Place, Time, Situation</SelectItem>
-                      <SelectItem value="x3 - Person, Place, Time">x3 - Person, Place, Time</SelectItem>
-                      <SelectItem value="x2 - Person, Place">x2 - Person, Place</SelectItem>
-                      <SelectItem value="x1 - Person only">x1 - Person only</SelectItem>
-                      <SelectItem value="x0 - Unresponsive">x0 - Unresponsive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* System Assessments */}
-          <Accordion type="multiple" defaultValue={["head-to-toe"]} className="space-y-4">
-            {/* Head to Toe */}
-            <AccordionItem value="head-to-toe" className="bg-white border border-slate-100 rounded-xl px-6">
-              <AccordionTrigger className="hover:no-underline">
-                <span className="flex items-center gap-2 text-lg font-semibold">
-                  <Eye className="w-5 h-5 text-teal-700" />
-                  Head to Toe Assessment
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="space-y-4 pt-4">
-                <div>
-                  <Label>Head & Neck</Label>
-                  <Textarea
-                    value={visitData.head_to_toe.head_neck}
-                    onChange={(e) => updateHeadToToe('head_neck', e.target.value)}
-                    placeholder="Describe findings..."
-                    className="mt-1"
-                    rows={2}
-                    data-testid="head-neck-input"
-                  />
-                </div>
-                <div>
-                  <Label>Eyes / Vision</Label>
-                  <Textarea
-                    value={visitData.head_to_toe.eyes_vision}
-                    onChange={(e) => updateHeadToToe('eyes_vision', e.target.value)}
-                    placeholder="Describe findings..."
-                    className="mt-1"
-                    rows={2}
-                    data-testid="eyes-vision-input"
-                  />
-                </div>
-                <div>
-                  <Label>Ears / Hearing</Label>
-                  <Textarea
-                    value={visitData.head_to_toe.ears_hearing}
-                    onChange={(e) => updateHeadToToe('ears_hearing', e.target.value)}
-                    placeholder="Describe findings..."
-                    className="mt-1"
-                    rows={2}
-                    data-testid="ears-hearing-input"
-                  />
-                </div>
-                <div>
-                  <Label>Nose / Nasal Cavity</Label>
-                  <Textarea
-                    value={visitData.head_to_toe.nose_nasal_cavity}
-                    onChange={(e) => updateHeadToToe('nose_nasal_cavity', e.target.value)}
-                    placeholder="Describe findings..."
-                    className="mt-1"
-                    rows={2}
-                    data-testid="nose-input"
-                  />
-                </div>
-                <div>
-                  <Label>Mouth / Teeth / Oral Cavity</Label>
-                  <Textarea
-                    value={visitData.head_to_toe.mouth_teeth_oral_cavity}
-                    onChange={(e) => updateHeadToToe('mouth_teeth_oral_cavity', e.target.value)}
-                    placeholder="Describe findings..."
-                    className="mt-1"
-                    rows={2}
-                    data-testid="mouth-input"
-                  />
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Gastrointestinal */}
-            <AccordionItem value="gi" className="bg-white border border-slate-100 rounded-xl px-6">
-              <AccordionTrigger className="hover:no-underline">
-                <span className="flex items-center gap-2 text-lg font-semibold">
-                  <Droplet className="w-5 h-5 text-amber-600" />
-                  Gastrointestinal Assessment
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="space-y-4 pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Full Assessment - Only for nurse_visit type */}
+          {visitType === 'nurse_visit' && (
+            <>
+              {/* Physical Assessment */}
+              <Card className="bg-white border-slate-100">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <User className="w-5 h-5 text-teal-700" />
+                    Physical Assessment
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div>
-                    <Label>Last Bowel Movement</Label>
-                    <Input
-                      type="date"
-                      value={visitData.gastrointestinal.last_bowel_movement}
-                      onChange={(e) => updateGI('last_bowel_movement', e.target.value)}
+                    <Label>General Appearance</Label>
+                    <Textarea
+                      value={visitData.physical_assessment.general_appearance}
+                      onChange={(e) => updatePhysicalAssessment('general_appearance', e.target.value)}
+                      placeholder="Describe patient's general appearance..."
                       className="mt-1"
-                      data-testid="last-bm-input"
+                      rows={2}
+                      data-testid="general-appearance-input"
                     />
                   </div>
                   <div>
-                    <Label>Bowel Sounds</Label>
-                    <Select
-                      value={visitData.gastrointestinal.bowel_sounds}
-                      onValueChange={(value) => updateGI('bowel_sounds', value)}
-                    >
-                      <SelectTrigger className="mt-1" data-testid="bowel-sounds-select">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Present - Normal">Present - Normal</SelectItem>
-                        <SelectItem value="Hyperactive">Hyperactive</SelectItem>
-                        <SelectItem value="Hypoactive">Hypoactive</SelectItem>
-                        <SelectItem value="Absent">Absent</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label>Skin Assessment</Label>
+                    <Textarea
+                      value={visitData.physical_assessment.skin_assessment}
+                      onChange={(e) => updatePhysicalAssessment('skin_assessment', e.target.value)}
+                      placeholder="Describe skin condition, integrity, wounds..."
+                      className="mt-1"
+                      rows={2}
+                      data-testid="skin-assessment-input"
+                    />
                   </div>
-                </div>
-                <div>
-                  <Label>Nutritional Diet</Label>
-                  <Select
-                    value={visitData.gastrointestinal.nutritional_diet}
-                    onValueChange={(value) => updateGI('nutritional_diet', value)}
-                  >
-                    <SelectTrigger className="mt-1" data-testid="diet-select">
-                      <SelectValue placeholder="Select diet type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Regular">Regular</SelectItem>
-                      <SelectItem value="Puree/Blended">Puree/Blended</SelectItem>
-                      <SelectItem value="Tube Feeding">Tube Feeding</SelectItem>
-                      <SelectItem value="DASH Diet">DASH Diet</SelectItem>
-                      <SelectItem value="Restricted Fluids">Restricted Fluids</SelectItem>
-                      <SelectItem value="Diabetic Diet">Diabetic Diet</SelectItem>
-                      <SelectItem value="Low Sodium">Low Sodium</SelectItem>
-                      <SelectItem value="Thickened Liquids">Thickened Liquids</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Genito-Urinary */}
-            <AccordionItem value="gu" className="bg-white border border-slate-100 rounded-xl px-6">
-              <AccordionTrigger className="hover:no-underline">
-                <span className="flex items-center gap-2 text-lg font-semibold">
-                  <Droplet className="w-5 h-5 text-blue-600" />
-                  Genito-Urinary Assessment
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="space-y-4 pt-4">
-                <div>
-                  <Label>Toileting Level</Label>
-                  <Select
-                    value={visitData.genito_urinary.toileting_level}
-                    onValueChange={(value) => updateGU('toileting_level', value)}
-                  >
-                    <SelectTrigger className="mt-1" data-testid="toileting-select">
-                      <SelectValue placeholder="Select toileting level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Self-Toileting">Self-Toileting</SelectItem>
-                      <SelectItem value="Assisted Toileting">Assisted Toileting</SelectItem>
-                      <SelectItem value="Bedpan/Urinal">Bedpan/Urinal</SelectItem>
-                      <SelectItem value="Indwelling Catheter">Indwelling Catheter</SelectItem>
-                      <SelectItem value="Intermittent Catheter">Intermittent Catheter</SelectItem>
-                      <SelectItem value="Adult Diapers/Brief">Adult Diapers/Brief</SelectItem>
-                      <SelectItem value="Ostomy">Ostomy</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Respiratory */}
-            <AccordionItem value="respiratory" className="bg-white border border-slate-100 rounded-xl px-6">
-              <AccordionTrigger className="hover:no-underline">
-                <span className="flex items-center gap-2 text-lg font-semibold">
-                  <Wind className="w-5 h-5 text-cyan-600" />
-                  Respiratory Assessment
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="space-y-4 pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label>Lung Sounds</Label>
-                    <Select
-                      value={visitData.respiratory.lung_sounds}
-                      onValueChange={(value) => updateRespiratory('lung_sounds', value)}
-                    >
-                      <SelectTrigger className="mt-1" data-testid="lung-sounds-select">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Clear">Clear</SelectItem>
-                        <SelectItem value="Wheezing">Wheezing</SelectItem>
-                        <SelectItem value="Crackles">Crackles</SelectItem>
-                        <SelectItem value="Rhonchi">Rhonchi</SelectItem>
-                        <SelectItem value="Diminished">Diminished</SelectItem>
-                        <SelectItem value="Absent">Absent</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Oxygen Type</Label>
-                    <Select
-                      value={visitData.respiratory.oxygen_type}
-                      onValueChange={(value) => updateRespiratory('oxygen_type', value)}
-                    >
-                      <SelectTrigger className="mt-1" data-testid="oxygen-type-select">
-                        <SelectValue placeholder="Select oxygen type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Room Air">Room Air</SelectItem>
-                        <SelectItem value="Nasal Cannula">Nasal Cannula</SelectItem>
-                        <SelectItem value="Simple Mask">Simple Mask</SelectItem>
-                        <SelectItem value="Non-Rebreather">Non-Rebreather</SelectItem>
-                        <SelectItem value="BiPAP">BiPAP</SelectItem>
-                        <SelectItem value="CPAP">CPAP</SelectItem>
-                        <SelectItem value="Ventilator">Ventilator</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Endocrine */}
-            <AccordionItem value="endocrine" className="bg-white border border-slate-100 rounded-xl px-6">
-              <AccordionTrigger className="hover:no-underline">
-                <span className="flex items-center gap-2 text-lg font-semibold">
-                  <Thermometer className="w-5 h-5 text-purple-600" />
-                  Endocrine Assessment
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="space-y-4 pt-4">
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    id="isDiabetic"
-                    checked={visitData.endocrine.is_diabetic}
-                    onCheckedChange={(checked) => updateEndocrine('is_diabetic', checked)}
-                    data-testid="diabetic-checkbox"
-                  />
-                  <Label htmlFor="isDiabetic" className="cursor-pointer">Patient is diabetic</Label>
-                </div>
-                {visitData.endocrine.is_diabetic && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <Label>Blood Sugar (mg/dL)</Label>
-                      <Input
-                        value={visitData.endocrine.blood_sugar}
-                        onChange={(e) => updateEndocrine('blood_sugar', e.target.value)}
-                        placeholder="e.g., 120"
-                        className="mt-1"
-                        data-testid="blood-sugar-input"
-                      />
+                      <Label>Mobility Level</Label>
+                      <Select
+                        value={visitData.physical_assessment.mobility_level}
+                        onValueChange={(value) => updatePhysicalAssessment('mobility_level', value)}
+                      >
+                        <SelectTrigger className="mt-1" data-testid="mobility-select">
+                          <SelectValue placeholder="Select level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Independent">Independent</SelectItem>
+                          <SelectItem value="Minimal Assistance">Minimal Assistance</SelectItem>
+                          <SelectItem value="Moderate Assistance">Moderate Assistance</SelectItem>
+                          <SelectItem value="Maximum Assistance">Maximum Assistance</SelectItem>
+                          <SelectItem value="Total Dependence">Total Dependence</SelectItem>
+                          <SelectItem value="Bedbound">Bedbound</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
-                      <Label>Diabetic Notes</Label>
+                      <Label>Speech Level</Label>
+                      <Select
+                        value={visitData.physical_assessment.speech_level}
+                        onValueChange={(value) => updatePhysicalAssessment('speech_level', value)}
+                      >
+                        <SelectTrigger className="mt-1" data-testid="speech-select">
+                          <SelectValue placeholder="Select level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Clear & Coherent">Clear & Coherent</SelectItem>
+                          <SelectItem value="Slurred">Slurred</SelectItem>
+                          <SelectItem value="Impaired">Impaired</SelectItem>
+                          <SelectItem value="Non-verbal">Non-verbal</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Alert & Oriented Level</Label>
+                      <Select
+                        value={visitData.physical_assessment.alert_oriented_level}
+                        onValueChange={(value) => updatePhysicalAssessment('alert_oriented_level', value)}
+                      >
+                        <SelectTrigger className="mt-1" data-testid="orientation-select">
+                          <SelectValue placeholder="Select level (0-4)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="x4 - Person, Place, Time, Situation">x4 - Person, Place, Time, Situation</SelectItem>
+                          <SelectItem value="x3 - Person, Place, Time">x3 - Person, Place, Time</SelectItem>
+                          <SelectItem value="x2 - Person, Place">x2 - Person, Place</SelectItem>
+                          <SelectItem value="x1 - Person only">x1 - Person only</SelectItem>
+                          <SelectItem value="x0 - Unresponsive">x0 - Unresponsive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* System Assessments */}
+              <Accordion type="multiple" defaultValue={["head-to-toe"]} className="space-y-4">
+                {/* Head to Toe */}
+                <AccordionItem value="head-to-toe" className="bg-white border border-slate-100 rounded-xl px-6">
+                  <AccordionTrigger className="hover:no-underline">
+                    <span className="flex items-center gap-2 text-lg font-semibold">
+                      <Eye className="w-5 h-5 text-teal-700" />
+                      Head to Toe Assessment
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-4">
+                    <div>
+                      <Label>Head & Neck</Label>
                       <Textarea
-                        value={visitData.endocrine.diabetic_notes}
-                        onChange={(e) => updateEndocrine('diabetic_notes', e.target.value)}
-                        placeholder="Additional notes..."
+                        value={visitData.head_to_toe.head_neck}
+                        onChange={(e) => updateHeadToToe('head_neck', e.target.value)}
+                        placeholder="Describe findings..."
                         className="mt-1"
                         rows={2}
-                        data-testid="diabetic-notes-input"
                       />
                     </div>
-                  </div>
-                )}
-              </AccordionContent>
-            </AccordionItem>
+                    <div>
+                      <Label>Eyes / Vision</Label>
+                      <Textarea
+                        value={visitData.head_to_toe.eyes_vision}
+                        onChange={(e) => updateHeadToToe('eyes_vision', e.target.value)}
+                        placeholder="Describe findings..."
+                        className="mt-1"
+                        rows={2}
+                      />
+                    </div>
+                    <div>
+                      <Label>Ears / Hearing</Label>
+                      <Textarea
+                        value={visitData.head_to_toe.ears_hearing}
+                        onChange={(e) => updateHeadToToe('ears_hearing', e.target.value)}
+                        placeholder="Describe findings..."
+                        className="mt-1"
+                        rows={2}
+                      />
+                    </div>
+                    <div>
+                      <Label>Nose / Nasal Cavity</Label>
+                      <Textarea
+                        value={visitData.head_to_toe.nose_nasal_cavity}
+                        onChange={(e) => updateHeadToToe('nose_nasal_cavity', e.target.value)}
+                        placeholder="Describe findings..."
+                        className="mt-1"
+                        rows={2}
+                      />
+                    </div>
+                    <div>
+                      <Label>Mouth / Teeth / Oral Cavity</Label>
+                      <Textarea
+                        value={visitData.head_to_toe.mouth_teeth_oral_cavity}
+                        onChange={(e) => updateHeadToToe('mouth_teeth_oral_cavity', e.target.value)}
+                        placeholder="Describe findings..."
+                        className="mt-1"
+                        rows={2}
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
-            {/* Changes Since Last Visit */}
-            <AccordionItem value="changes" className="bg-white border border-slate-100 rounded-xl px-6">
-              <AccordionTrigger className="hover:no-underline">
-                <span className="flex items-center gap-2 text-lg font-semibold">
-                  <AlertCircle className="w-5 h-5 text-amber-600" />
-                  Changes Since Last Visit
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="space-y-4 pt-4">
-                <div>
-                  <Label>Medication Changes (Start/Stop)</Label>
-                  <Textarea
-                    value={visitData.changes_since_last.medication_changes}
-                    onChange={(e) => updateChanges('medication_changes', e.target.value)}
-                    placeholder="Any medication changes since last visit..."
-                    className="mt-1"
-                    rows={2}
-                    data-testid="med-changes-input"
-                  />
-                </div>
-                <div>
-                  <Label>Diagnosis Changes</Label>
-                  <Textarea
-                    value={visitData.changes_since_last.diagnosis_changes}
-                    onChange={(e) => updateChanges('diagnosis_changes', e.target.value)}
-                    placeholder="Any new diagnoses or changes..."
-                    className="mt-1"
-                    rows={2}
-                    data-testid="diagnosis-changes-input"
-                  />
-                </div>
-                <div>
-                  <Label>ER / Urgent Care Visits</Label>
-                  <Textarea
-                    value={visitData.changes_since_last.er_urgent_care_visits}
-                    onChange={(e) => updateChanges('er_urgent_care_visits', e.target.value)}
-                    placeholder="Any ER or urgent care visits since last seen..."
-                    className="mt-1"
-                    rows={2}
-                    data-testid="er-visits-input"
-                  />
-                </div>
-                <div>
-                  <Label>Upcoming Appointments (Next 30 Days)</Label>
-                  <Textarea
-                    value={visitData.changes_since_last.upcoming_appointments}
-                    onChange={(e) => updateChanges('upcoming_appointments', e.target.value)}
-                    placeholder="Any scheduled appointments..."
-                    className="mt-1"
-                    rows={2}
-                    data-testid="upcoming-appts-input"
-                  />
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+                {/* Gastrointestinal */}
+                <AccordionItem value="gi" className="bg-white border border-slate-100 rounded-xl px-6">
+                  <AccordionTrigger className="hover:no-underline">
+                    <span className="flex items-center gap-2 text-lg font-semibold">
+                      <Droplet className="w-5 h-5 text-amber-600" />
+                      Gastrointestinal Assessment
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Last Bowel Movement</Label>
+                        <Input
+                          type="date"
+                          value={visitData.gastrointestinal.last_bowel_movement}
+                          onChange={(e) => updateGI('last_bowel_movement', e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Bowel Sounds</Label>
+                        <Select
+                          value={visitData.gastrointestinal.bowel_sounds}
+                          onValueChange={(value) => updateGI('bowel_sounds', value)}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Present - Normal">Present - Normal</SelectItem>
+                            <SelectItem value="Hyperactive">Hyperactive</SelectItem>
+                            <SelectItem value="Hypoactive">Hypoactive</SelectItem>
+                            <SelectItem value="Absent">Absent</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Nutritional Diet</Label>
+                      <Select
+                        value={visitData.gastrointestinal.nutritional_diet}
+                        onValueChange={(value) => updateGI('nutritional_diet', value)}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select diet type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Regular">Regular</SelectItem>
+                          <SelectItem value="Puree/Blended">Puree/Blended</SelectItem>
+                          <SelectItem value="Tube Feeding">Tube Feeding</SelectItem>
+                          <SelectItem value="DASH Diet">DASH Diet</SelectItem>
+                          <SelectItem value="Restricted Fluids">Restricted Fluids</SelectItem>
+                          <SelectItem value="Diabetic Diet">Diabetic Diet</SelectItem>
+                          <SelectItem value="Low Sodium">Low Sodium</SelectItem>
+                          <SelectItem value="Thickened Liquids">Thickened Liquids</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
-          {/* Overall Status */}
-          <Card className="bg-white border-slate-100">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Brain className="w-5 h-5 text-teal-700" />
-                Overall Assessment
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>Current Overall Health Condition</Label>
-                <Select
-                  value={visitData.overall_health_status}
-                  onValueChange={(value) => setVisitData(prev => ({ ...prev, overall_health_status: value }))}
-                >
-                  <SelectTrigger className="mt-1" data-testid="health-status-select">
-                    <SelectValue placeholder="Select health status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Stable">Stable</SelectItem>
-                    <SelectItem value="Unstable">Unstable</SelectItem>
-                    <SelectItem value="Deteriorating">Deteriorating</SelectItem>
-                    <SelectItem value="Needs Immediate Attention">Needs Immediate Medical Attention at Hospital</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Nurse Notes</Label>
-                <Textarea
-                  value={visitData.nurse_notes}
-                  onChange={(e) => setVisitData(prev => ({ ...prev, nurse_notes: e.target.value }))}
-                  placeholder="Additional observations, recommendations, or concerns..."
-                  className="mt-1"
-                  rows={4}
-                  data-testid="nurse-notes-input"
-                />
-              </div>
-            </CardContent>
-          </Card>
+                {/* Genito-Urinary */}
+                <AccordionItem value="gu" className="bg-white border border-slate-100 rounded-xl px-6">
+                  <AccordionTrigger className="hover:no-underline">
+                    <span className="flex items-center gap-2 text-lg font-semibold">
+                      <Droplet className="w-5 h-5 text-blue-600" />
+                      Genito-Urinary Assessment
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-4">
+                    <div>
+                      <Label>Toileting Level</Label>
+                      <Select
+                        value={visitData.genito_urinary.toileting_level}
+                        onValueChange={(value) => updateGU('toileting_level', value)}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select toileting level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Self-Toileting">Self-Toileting</SelectItem>
+                          <SelectItem value="Assisted Toileting">Assisted Toileting</SelectItem>
+                          <SelectItem value="Bedpan/Urinal">Bedpan/Urinal</SelectItem>
+                          <SelectItem value="Indwelling Catheter">Indwelling Catheter</SelectItem>
+                          <SelectItem value="Intermittent Catheter">Intermittent Catheter</SelectItem>
+                          <SelectItem value="Adult Diapers/Brief">Adult Diapers/Brief</SelectItem>
+                          <SelectItem value="Ostomy">Ostomy</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Respiratory */}
+                <AccordionItem value="respiratory" className="bg-white border border-slate-100 rounded-xl px-6">
+                  <AccordionTrigger className="hover:no-underline">
+                    <span className="flex items-center gap-2 text-lg font-semibold">
+                      <Wind className="w-5 h-5 text-cyan-600" />
+                      Respiratory Assessment
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Lung Sounds</Label>
+                        <Select
+                          value={visitData.respiratory.lung_sounds}
+                          onValueChange={(value) => updateRespiratory('lung_sounds', value)}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Clear">Clear</SelectItem>
+                            <SelectItem value="Wheezing">Wheezing</SelectItem>
+                            <SelectItem value="Crackles">Crackles</SelectItem>
+                            <SelectItem value="Rhonchi">Rhonchi</SelectItem>
+                            <SelectItem value="Diminished">Diminished</SelectItem>
+                            <SelectItem value="Absent">Absent</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Oxygen Type</Label>
+                        <Select
+                          value={visitData.respiratory.oxygen_type}
+                          onValueChange={(value) => updateRespiratory('oxygen_type', value)}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select oxygen type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Room Air">Room Air</SelectItem>
+                            <SelectItem value="Nasal Cannula">Nasal Cannula</SelectItem>
+                            <SelectItem value="Simple Mask">Simple Mask</SelectItem>
+                            <SelectItem value="Non-Rebreather">Non-Rebreather</SelectItem>
+                            <SelectItem value="BiPAP">BiPAP</SelectItem>
+                            <SelectItem value="CPAP">CPAP</SelectItem>
+                            <SelectItem value="Ventilator">Ventilator</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Endocrine */}
+                <AccordionItem value="endocrine" className="bg-white border border-slate-100 rounded-xl px-6">
+                  <AccordionTrigger className="hover:no-underline">
+                    <span className="flex items-center gap-2 text-lg font-semibold">
+                      <Activity className="w-5 h-5 text-purple-600" />
+                      Endocrine Assessment
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-4">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id="isDiabetic"
+                        checked={visitData.endocrine.is_diabetic}
+                        onCheckedChange={(checked) => updateEndocrine('is_diabetic', checked)}
+                      />
+                      <Label htmlFor="isDiabetic" className="cursor-pointer">Patient is diabetic</Label>
+                    </div>
+                    {visitData.endocrine.is_diabetic && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label>Blood Sugar (mg/dL)</Label>
+                          <Input
+                            value={visitData.endocrine.blood_sugar}
+                            onChange={(e) => updateEndocrine('blood_sugar', e.target.value)}
+                            placeholder="e.g., 120"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label>Diabetic Notes</Label>
+                          <Textarea
+                            value={visitData.endocrine.diabetic_notes}
+                            onChange={(e) => updateEndocrine('diabetic_notes', e.target.value)}
+                            placeholder="Additional notes..."
+                            className="mt-1"
+                            rows={2}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Changes Since Last Visit */}
+                <AccordionItem value="changes" className="bg-white border border-slate-100 rounded-xl px-6">
+                  <AccordionTrigger className="hover:no-underline">
+                    <span className="flex items-center gap-2 text-lg font-semibold">
+                      <AlertCircle className="w-5 h-5 text-amber-600" />
+                      Changes Since Last Visit
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-4">
+                    <div>
+                      <Label>Medication Changes (Start/Stop)</Label>
+                      <Textarea
+                        value={visitData.changes_since_last.medication_changes}
+                        onChange={(e) => updateChanges('medication_changes', e.target.value)}
+                        placeholder="Any medication changes since last visit..."
+                        className="mt-1"
+                        rows={2}
+                      />
+                    </div>
+                    <div>
+                      <Label>Diagnosis Changes</Label>
+                      <Textarea
+                        value={visitData.changes_since_last.diagnosis_changes}
+                        onChange={(e) => updateChanges('diagnosis_changes', e.target.value)}
+                        placeholder="Any new diagnoses or changes..."
+                        className="mt-1"
+                        rows={2}
+                      />
+                    </div>
+                    <div>
+                      <Label>ER / Urgent Care Visits</Label>
+                      <Textarea
+                        value={visitData.changes_since_last.er_urgent_care_visits}
+                        onChange={(e) => updateChanges('er_urgent_care_visits', e.target.value)}
+                        placeholder="Any ER or urgent care visits since last seen..."
+                        className="mt-1"
+                        rows={2}
+                      />
+                    </div>
+                    <div>
+                      <Label>Upcoming Appointments (Next 30 Days)</Label>
+                      <Textarea
+                        value={visitData.changes_since_last.upcoming_appointments}
+                        onChange={(e) => updateChanges('upcoming_appointments', e.target.value)}
+                        placeholder="Any scheduled appointments..."
+                        className="mt-1"
+                        rows={2}
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </>
+          )}
+
+          {/* Overall Status - For nurse_visit and vitals_only */}
+          {(visitType === 'nurse_visit' || visitType === 'vitals_only') && (
+            <Card className="bg-white border-slate-100">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Brain className="w-5 h-5 text-teal-700" />
+                  Overall Assessment
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label>Current Overall Health Condition</Label>
+                  <Select
+                    value={visitData.overall_health_status}
+                    onValueChange={(value) => setVisitData(prev => ({ ...prev, overall_health_status: value }))}
+                  >
+                    <SelectTrigger className="mt-1" data-testid="health-status-select">
+                      <SelectValue placeholder="Select health status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Stable">Stable</SelectItem>
+                      <SelectItem value="Unstable">Unstable</SelectItem>
+                      <SelectItem value="Deteriorating">Deteriorating</SelectItem>
+                      <SelectItem value="Needs Immediate Attention">Needs Immediate Medical Attention at Hospital</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Nurse Notes</Label>
+                  <Textarea
+                    value={visitData.nurse_notes}
+                    onChange={(e) => setVisitData(prev => ({ ...prev, nurse_notes: e.target.value }))}
+                    placeholder="Additional observations, recommendations, or concerns..."
+                    className="mt-1"
+                    rows={4}
+                    data-testid="nurse-notes-input"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Submit Button */}
           <div className="flex justify-end">
