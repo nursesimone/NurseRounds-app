@@ -327,6 +327,21 @@ export default function VisitDetailPage() {
           </CardContent>
         </Card>
 
+        {/* Daily Note Content - for daily_note type */}
+        {visit.daily_note_content && (
+          <Card className="bg-white border-slate-100 mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FileText className="w-5 h-5 text-amber-600" />
+                Daily Note
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-slate-900 whitespace-pre-wrap">{visit.daily_note_content}</p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Vital Signs */}
         <Card className="bg-white border-slate-100 mb-6">
           <CardHeader>
