@@ -56,4 +56,9 @@ export const visitsAPI = {
   delete: (visitId) => api.delete(`/visits/${visitId}`),
 };
 
+// Reports API
+export const reportsAPI = {
+  getMonthly: (data) => api.post('/reports/monthly', data),
+};
+
 export default api;
