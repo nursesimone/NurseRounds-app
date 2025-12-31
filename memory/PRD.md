@@ -31,6 +31,21 @@ Build an app that allows conducting home nurse visits with:
 - [x] Protected routes requiring authentication
 - [x] Logout functionality
 
+### Visit Type Selection (NEW - Dec 31)
+- [x] Post-login visit type selection screen
+- [x] Three visit types: NURSE Visit, Vital Signs ONLY, Resident's Daily Note
+- [x] Organization dropdown for Nurse Visit (POSH-Able Living, Ebenezer Private Home Care)
+- [x] Visit type stored in session and passed to visit forms
+
+### Monthly Reports (NEW - Dec 31)
+- [x] Monthly reports page with filters (Year, Month, Patient, Organization)
+- [x] Generate reports for any full calendar month
+- [x] Current month-to-date reporting
+- [x] Visit breakdown by type (Nurse Visits, Vitals Only, Daily Notes)
+- [x] Organization-wise visit counts
+- [x] PDF download with full report details
+- [x] Tabbed view for filtering visits by type
+
 ### Patient Management
 - [x] Create new patients
 - [x] Edit patient permanent information
@@ -53,6 +68,8 @@ Build an app that allows conducting home nurse visits with:
 - [x] Visit Frequency
 
 ### Visit Documentation
+- [x] Visit Type support: Nurse Visit, Vitals Only, Daily Note
+- [x] Organization tracking per visit
 - [x] Vital Signs (Weight, Temp, BP, SpO2, Pulse, Respirations)
 - [x] Repeat BP fields when initial BP is abnormal
 - [x] Physical Assessment (General Appearance, Skin, Mobility, Speech, Orientation)
@@ -64,6 +81,7 @@ Build an app that allows conducting home nurse visits with:
 - [x] Changes Since Last Visit (Meds, Diagnoses, ER Visits, Appointments)
 - [x] Overall Health Status (Stable/Unstable/Deteriorating/Immediate Attention)
 - [x] Nurse Notes
+- [x] Daily Note content field (for Daily Note type)
 
 ### Reports
 - [x] PDF download for individual visits
@@ -114,9 +132,12 @@ Build an app that allows conducting home nurse visits with:
 
 ### Visits
 - `GET /api/patients/{id}/visits` - List visits for patient
-- `POST /api/patients/{id}/visits` - Create visit
+- `POST /api/patients/{id}/visits` - Create visit (supports visit_type, organization)
 - `GET /api/visits/{id}` - Get visit detail
 - `DELETE /api/visits/{id}` - Delete visit
+
+### Reports
+- `POST /api/reports/monthly` - Generate monthly report with filters
 
 ## Test Credentials
 - Email: demo@test.com
