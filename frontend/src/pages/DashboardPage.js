@@ -101,11 +101,35 @@ export default function DashboardPage() {
       <header className="bg-white border-b border-slate-100 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-teal-700 rounded-xl flex items-center justify-center">
-                <Stethoscope className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate('/visit-type')}
+                data-testid="back-to-visit-type"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-teal-700 rounded-xl flex items-center justify-center">
+                  <Stethoscope className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <span className="text-xl font-bold text-slate-900">MedRounds</span>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                      visitType === 'nurse_visit' ? 'bg-teal-50 text-teal-700' :
+                      visitType === 'vitals_only' ? 'bg-blue-50 text-blue-700' :
+                      'bg-amber-50 text-amber-700'
+                    }`}>
+                      {getVisitTypeLabel()}
+                    </span>
+                    {organization && (
+                      <span className="text-slate-500">• {organization}</span>
+                    )}
+                  </div>
+                </div>
               </div>
-              <span className="text-xl font-bold text-slate-900">MedRounds</span>
             </div>
             
             <div className="flex items-center gap-4">
