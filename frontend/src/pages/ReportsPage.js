@@ -346,7 +346,7 @@ export default function ReportsPage() {
                   <SelectContent>
                     <SelectItem value="all">All Organizations</SelectItem>
                     <SelectItem value="POSH-Able Living">POSH-Able Living</SelectItem>
-                    <SelectItem value="Ebenezer Private Home Care">Ebenezer Private Home Care</SelectItem>
+                    <SelectItem value="Ebenezer Private HomeCare">Ebenezer Private HomeCare</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
