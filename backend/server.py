@@ -138,6 +138,8 @@ class ChangesSinceLastVisit(BaseModel):
 
 class VisitCreate(BaseModel):
     visit_date: Optional[str] = None
+    visit_type: str = "nurse_visit"  # nurse_visit, vitals_only, daily_note
+    organization: Optional[str] = None  # POSH-Able Living, Ebenezer Private Home Care
     vital_signs: VitalSigns = VitalSigns()
     physical_assessment: PhysicalAssessment = PhysicalAssessment()
     head_to_toe: HeadToToeAssessment = HeadToToeAssessment()
@@ -148,12 +150,15 @@ class VisitCreate(BaseModel):
     changes_since_last: ChangesSinceLastVisit = ChangesSinceLastVisit()
     overall_health_status: Optional[str] = None  # stable, unstable, deteriorating, needs immediate attention
     nurse_notes: Optional[str] = None
+    daily_note_content: Optional[str] = None  # For daily notes
 
 class VisitResponse(BaseModel):
     id: str
     patient_id: str
     nurse_id: str
     visit_date: str
+    visit_type: str = "nurse_visit"
+    organization: Optional[str] = None
     vital_signs: VitalSigns
     physical_assessment: PhysicalAssessment
     head_to_toe: HeadToToeAssessment
@@ -164,6 +169,7 @@ class VisitResponse(BaseModel):
     changes_since_last: ChangesSinceLastVisit
     overall_health_status: Optional[str] = None
     nurse_notes: Optional[str] = None
+    daily_note_content: Optional[str] = None
     created_at: str
 
 # ==================== AUTH HELPERS ====================
@@ -335,6 +341,8 @@ async def create_visit(patient_id: str, data: VisitCreate, nurse: dict = Depends
         "patient_id": patient_id,
         "nurse_id": nurse["id"],
         "visit_date": visit_date,
+        "visit_type": data.visit_type,
+        "organization": data.organization,
         "vital_signs": data.vital_signs.model_dump(),
         "physical_assessment": data.physical_assessment.model_dump(),
         "head_to_toe": data.head_to_toe.model_dump(),
@@ -345,6 +353,7 @@ async def create_visit(patient_id: str, data: VisitCreate, nurse: dict = Depends
         "changes_since_last": data.changes_since_last.model_dump(),
         "overall_health_status": data.overall_health_status,
         "nurse_notes": data.nurse_notes,
+        "daily_note_content": data.daily_note_content,
         "created_at": now
     }
     await db.visits.insert_one(visit_doc)
@@ -363,6 +372,8 @@ async def create_visit(patient_id: str, data: VisitCreate, nurse: dict = Depends
         patient_id=patient_id,
         nurse_id=nurse["id"],
         visit_date=visit_date,
+        visit_type=data.visit_type,
+        organization=data.organization,
         vital_signs=data.vital_signs,
         physical_assessment=data.physical_assessment,
         head_to_toe=data.head_to_toe,
@@ -373,6 +384,7 @@ async def create_visit(patient_id: str, data: VisitCreate, nurse: dict = Depends
         changes_since_last=data.changes_since_last,
         overall_health_status=data.overall_health_status,
         nurse_notes=data.nurse_notes,
+        daily_note_content=data.daily_note_content,
         created_at=now
     )
 
