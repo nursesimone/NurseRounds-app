@@ -86,7 +86,7 @@ export default function VisitTypePage() {
               <div className="w-10 h-10 bg-teal-700 rounded-xl flex items-center justify-center">
                 <Stethoscope className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-slate-900">MedRounds</span>
+              <span className="text-xl font-bold text-slate-900">NurseRounds</span>
             </div>
             
             <div className="flex items-center gap-4">

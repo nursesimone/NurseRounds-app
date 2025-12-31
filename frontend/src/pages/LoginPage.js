@@ -42,7 +42,7 @@ export default function LoginPage() {
               <Stethoscope className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">MedRounds</h1>
+              <h1 className="text-2xl font-bold text-slate-900">NurseRounds</h1>
               <p className="text-sm text-slate-500">Home Nurse Visit Management</p>
             </div>
           </div>

@@ -116,7 +116,7 @@ export default function ReportsPage() {
 
     // ============ HEADER ============
     // If filtering by organization, show that as main heading
-    const businessName = selectedOrganization !== 'all' ? selectedOrganization : 'MedRounds';
+    const businessName = selectedOrganization !== 'all' ? selectedOrganization : 'NurseRounds';
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(15, 118, 110);

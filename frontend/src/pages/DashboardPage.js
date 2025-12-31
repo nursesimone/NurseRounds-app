@@ -116,7 +116,7 @@ export default function DashboardPage() {
                   <Stethoscope className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <span className="text-xl font-bold text-slate-900">MedRounds</span>
+                  <span className="text-xl font-bold text-slate-900">NurseRounds</span>
                   <div className="flex items-center gap-2 text-sm">
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                       visitType === 'nurse_visit' ? 'bg-teal-50 text-teal-700' :

@@ -50,7 +50,7 @@ export default function RegisterPage() {
               <Stethoscope className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">MedRounds</h1>
+              <h1 className="text-2xl font-bold text-slate-900">NurseRounds</h1>
               <p className="text-sm text-slate-500">Home Nurse Visit Management</p>
             </div>
           </div>
@@ -58,7 +58,7 @@ export default function RegisterPage() {
           <Card className="border-0 shadow-lg">
             <CardHeader className="space-y-1 pb-4">
               <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
-              <CardDescription>Join MedRounds to manage your patient visits</CardDescription>
+              <CardDescription>Join NurseRounds to manage your patient visits</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
