@@ -294,17 +294,36 @@ export default function VisitDetailPage() {
                 <Activity className="w-5 h-5 text-teal-700" />
                 Visit Summary
               </CardTitle>
-              {visit.overall_health_status && (
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getHealthStatusColor(visit.overall_health_status)}`}>
-                  {visit.overall_health_status}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {visit.visit_type && (
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    visit.visit_type === 'nurse_visit' ? 'bg-teal-50 text-teal-700' :
+                    visit.visit_type === 'vitals_only' ? 'bg-blue-50 text-blue-700' :
+                    'bg-amber-50 text-amber-700'
+                  }`}>
+                    {visit.visit_type === 'nurse_visit' ? 'Nurse Visit' :
+                     visit.visit_type === 'vitals_only' ? 'Vitals Only' : 'Daily Note'}
+                  </span>
+                )}
+                {visit.overall_health_status && (
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getHealthStatusColor(visit.overall_health_status)}`}>
+                    {visit.overall_health_status}
+                  </span>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-slate-600">
-              Visit Date: <span className="font-medium text-slate-900">{formatDateTime(visit.visit_date)}</span>
-            </p>
+            <div className="flex flex-wrap gap-4 text-slate-600">
+              <p>
+                Visit Date: <span className="font-medium text-slate-900">{formatDateTime(visit.visit_date)}</span>
+              </p>
+              {visit.organization && (
+                <p>
+                  Organization: <span className="font-medium text-slate-900">{visit.organization}</span>
+                </p>
+              )}
+            </div>
           </CardContent>
         </Card>
 
