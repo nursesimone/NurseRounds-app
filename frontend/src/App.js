@@ -4,10 +4,12 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Toaster } from './components/ui/sonner';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import VisitTypePage from './pages/VisitTypePage';
 import DashboardPage from './pages/DashboardPage';
 import PatientDetailPage from './pages/PatientDetailPage';
 import NewVisitPage from './pages/NewVisitPage';
 import VisitDetailPage from './pages/VisitDetailPage';
+import ReportsPage from './pages/ReportsPage';
 import './App.css';
 
 // Protected Route wrapper
@@ -29,7 +31,7 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-// Public Route wrapper (redirects to dashboard if already logged in)
+// Public Route wrapper (redirects to visit-type if already logged in)
 function PublicRoute({ children }) {
   const { nurse, loading } = useAuth();
   
@@ -42,7 +44,7 @@ function PublicRoute({ children }) {
   }
   
   if (nurse) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/visit-type" replace />;
   }
   
   return children;
@@ -51,7 +53,7 @@ function PublicRoute({ children }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<Navigate to="/visit-type" replace />} />
       <Route 
         path="/login" 
         element={
@@ -66,6 +68,14 @@ function AppRoutes() {
           <PublicRoute>
             <RegisterPage />
           </PublicRoute>
+        } 
+      />
+      <Route 
+        path="/visit-type" 
+        element={
+          <ProtectedRoute>
+            <VisitTypePage />
+          </ProtectedRoute>
         } 
       />
       <Route 
@@ -100,7 +110,15 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route 
+        path="/reports" 
+        element={
+          <ProtectedRoute>
+            <ReportsPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route path="*" element={<Navigate to="/visit-type" replace />} />
     </Routes>
   );
 }
