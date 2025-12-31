@@ -1,4 +1,4 @@
-# MedRounds - Home Nurse Visit Management System
+# NurseRounds - Home Nurse Visit Management System
 
 ## Original Problem Statement
 Build an app that allows conducting home nurse visits with:
