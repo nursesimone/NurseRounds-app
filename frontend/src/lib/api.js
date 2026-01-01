@@ -64,6 +64,14 @@ export const unableToContactAPI = {
   delete: (recordId) => api.delete(`/unable-to-contact/${recordId}`),
 };
 
+// Interventions API
+export const interventionsAPI = {
+  list: (patientId) => api.get(`/patients/${patientId}/interventions`),
+  get: (interventionId) => api.get(`/interventions/${interventionId}`),
+  create: (data) => api.post('/interventions', data),
+  delete: (interventionId) => api.delete(`/interventions/${interventionId}`),
+};
+
 // Reports API
 export const reportsAPI = {
   getMonthly: (data) => api.post('/reports/monthly', data),
