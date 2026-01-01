@@ -97,17 +97,10 @@ export default function NewVisitPage() {
 
   // Get visit type from session storage
   const visitType = sessionStorage.getItem('visitType') || 'nurse_visit';
-  const organization = sessionStorage.getItem('organization') || '';
 
   useEffect(() => {
     fetchPatient();
-    // Set visit type and organization from session
-    setVisitData(prev => ({
-      ...prev,
-      visit_type: visitType,
-      organization: organization
-    }));
-  }, [patientId, visitType, organization]);
+  }, [patientId]);
 
   useEffect(() => {
     const { blood_pressure_systolic, blood_pressure_diastolic } = visitData.vital_signs;
@@ -122,6 +115,14 @@ export default function NewVisitPage() {
     try {
       const response = await patientsAPI.get(patientId);
       setPatient(response.data);
+      
+      // Set visit type from session and organization from patient profile
+      const patientOrg = response.data.permanent_info?.organization || '';
+      setVisitData(prev => ({
+        ...prev,
+        visit_type: visitType,
+        organization: patientOrg
+      }));
       
       if (response.data.last_vitals) {
         setVisitData(prev => ({
