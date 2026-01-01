@@ -46,15 +46,23 @@ class NurseResponse(BaseModel):
     email: str
     full_name: str
     license_number: Optional[str] = None
+    is_admin: bool = False
     created_at: str
 
 class TokenResponse(BaseModel):
     token: str
     nurse: NurseResponse
 
+class NurseListResponse(BaseModel):
+    id: str
+    email: str
+    full_name: str
+    license_number: Optional[str] = None
+    is_admin: bool = False
+
 # ==================== PATIENT MODELS ====================
 class PatientPermanentInfo(BaseModel):
-    organization: Optional[str] = None  # POSH-Able Living, Ebenezer Private HomeCare, or custom
+    organization: Optional[str] = None  # POSH-Able Living, Ebenezer Private HomeCare, or custom - REQUIRED first field
     race: Optional[str] = None
     gender: Optional[str] = None
     height: Optional[str] = None
@@ -72,23 +80,27 @@ class PatientPermanentInfo(BaseModel):
 
 class PatientCreate(BaseModel):
     full_name: str
+    organization: str  # Required - moved to top level for creation
     permanent_info: PatientPermanentInfo = PatientPermanentInfo()
 
 class PatientUpdate(BaseModel):
     full_name: Optional[str] = None
     permanent_info: Optional[PatientPermanentInfo] = None
+    assigned_nurses: Optional[List[str]] = None  # List of nurse IDs
 
 class PatientResponse(BaseModel):
     id: str
     full_name: str
     permanent_info: PatientPermanentInfo
-    nurse_id: str
+    nurse_id: str  # Creator/admin who added
+    assigned_nurses: List[str] = []  # List of assigned nurse IDs
     created_at: str
     updated_at: str
     last_vitals: Optional[dict] = None
     last_vitals_date: Optional[str] = None
     last_visit_date: Optional[str] = None
     last_utc: Optional[dict] = None  # last unable to contact record
+    is_assigned_to_me: bool = False  # Computed field for current user
 
 # ==================== VISIT MODELS ====================
 class VitalSigns(BaseModel):
