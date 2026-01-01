@@ -124,15 +124,13 @@ export default function NewVisitPage() {
         organization: patientOrg
       }));
       
-      if (response.data.last_vitals) {
+      // Only pre-fill height from last vitals (height should persist)
+      if (response.data.last_vitals?.height) {
         setVisitData(prev => ({
           ...prev,
           vital_signs: {
             ...prev.vital_signs,
-            ...response.data.last_vitals,
-            repeat_blood_pressure_systolic: '',
-            repeat_blood_pressure_diastolic: '',
-            bp_abnormal: false
+            height: response.data.last_vitals.height
           }
         }));
       }

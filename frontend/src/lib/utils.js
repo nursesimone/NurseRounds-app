@@ -57,5 +57,6 @@ export function isBloodPressureAbnormal(systolic, diastolic) {
   const sys = parseInt(systolic);
   const dia = parseInt(diastolic);
   if (isNaN(sys) || isNaN(dia)) return false;
-  return sys >= 130 || dia >= 80 || sys < 90 || dia < 60;
+  // Abnormal: sys >= 140 or dia >= 90 or sys < 90 or dia < 60
+  return sys >= 140 || dia >= 90 || sys < 90 || dia < 60;
 }
