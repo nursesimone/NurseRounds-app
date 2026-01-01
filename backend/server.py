@@ -226,6 +226,22 @@ class InterventionCreate(BaseModel):
     # Universal acknowledgments
     verified_patient_identity: bool = False
     donned_proper_ppe: bool = False
+    # Post-intervention observations (select all that apply)
+    post_no_severe_symptoms: bool = False
+    post_tolerated_well: bool = False
+    post_informed_side_effects: bool = False
+    post_advised_results_timeframe: bool = False
+    post_educated_seek_care: bool = False
+    # Intervention completion status
+    completion_status: Optional[str] = None  # only_one, series_ongoing, series_completed
+    next_visit_interval: Optional[str] = None  # day, week, month, 3_months, 6_months, 12_months, other
+    next_visit_interval_other: Optional[str] = None
+    # Who was present
+    present_person_type: Optional[str] = None  # parent_guardian, caregiver, staff, family, other
+    present_person_type_other: Optional[str] = None
+    present_person_name: Optional[str] = None
+    # Additional comments
+    additional_comments: Optional[str] = None
     notes: Optional[str] = None
 
 class InterventionResponse(BaseModel):
@@ -245,6 +261,18 @@ class InterventionResponse(BaseModel):
     procedure_details: Optional[dict] = None
     verified_patient_identity: bool = False
     donned_proper_ppe: bool = False
+    post_no_severe_symptoms: bool = False
+    post_tolerated_well: bool = False
+    post_informed_side_effects: bool = False
+    post_advised_results_timeframe: bool = False
+    post_educated_seek_care: bool = False
+    completion_status: Optional[str] = None
+    next_visit_interval: Optional[str] = None
+    next_visit_interval_other: Optional[str] = None
+    present_person_type: Optional[str] = None
+    present_person_type_other: Optional[str] = None
+    present_person_name: Optional[str] = None
+    additional_comments: Optional[str] = None
     notes: Optional[str] = None
     created_at: str
 
