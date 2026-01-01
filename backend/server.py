@@ -176,6 +176,78 @@ class VisitResponse(BaseModel):
     daily_note_content: Optional[str] = None
     created_at: str
 
+# ==================== INTERVENTION MODELS ====================
+class InjectionDetails(BaseModel):
+    is_vaccination: bool = False
+    vaccination_type: Optional[str] = None  # Flu, Covid, tDap, Tetanus, Other
+    vaccination_other: Optional[str] = None
+    non_vaccination_type: Optional[str] = None  # Cyanocobalamin/B-12, Other
+    non_vaccination_other: Optional[str] = None
+    dose: Optional[str] = None
+    route: Optional[str] = None  # IM, SubQ, ID, IV
+    site: Optional[str] = None
+    # Injection-specific acknowledgments
+    verified_no_allergic_reaction: bool = False
+    cleaned_injection_site: bool = False
+    adhered_8_rights: bool = False
+
+class TestDetails(BaseModel):
+    test_type: str  # blood_glucose, hcg, tb_placing, tb_reading, rapid_strep, covid, flu, throat_culture, dna, vision, hearing, other
+    test_other: Optional[str] = None
+    tb_placement_site: Optional[str] = None
+    tb_arm: Optional[str] = None  # Left, Right
+    result: Optional[str] = None
+    notes: Optional[str] = None
+
+class TreatmentDetails(BaseModel):
+    treatment_type: str  # nebulizer, spirometry, epipen, insulin_fast, other
+    treatment_other: Optional[str] = None
+    notes: Optional[str] = None
+
+class ProcedureDetails(BaseModel):
+    procedure_type: str  # suture_removal, cerumen_removal, wound_dressing, other
+    procedure_other: Optional[str] = None
+    body_site: Optional[str] = None
+    suture_count: Optional[int] = None
+    ear_side: Optional[str] = None  # Left, Right, Both
+    notes: Optional[str] = None
+
+class InterventionCreate(BaseModel):
+    patient_id: str
+    intervention_date: str
+    location: str  # home, adult_day_center
+    body_temperature: Optional[str] = None
+    mood_scale: Optional[int] = None  # 1-5
+    intervention_type: str  # injection, test, treatment, procedure
+    injection_details: Optional[InjectionDetails] = None
+    test_details: Optional[TestDetails] = None
+    treatment_details: Optional[TreatmentDetails] = None
+    procedure_details: Optional[ProcedureDetails] = None
+    # Universal acknowledgments
+    verified_patient_identity: bool = False
+    donned_proper_ppe: bool = False
+    notes: Optional[str] = None
+
+class InterventionResponse(BaseModel):
+    id: str
+    patient_id: str
+    patient_name: Optional[str] = None
+    patient_dob: Optional[str] = None
+    nurse_id: str
+    intervention_date: str
+    location: str
+    body_temperature: Optional[str] = None
+    mood_scale: Optional[int] = None
+    intervention_type: str
+    injection_details: Optional[dict] = None
+    test_details: Optional[dict] = None
+    treatment_details: Optional[dict] = None
+    procedure_details: Optional[dict] = None
+    verified_patient_identity: bool = False
+    donned_proper_ppe: bool = False
+    notes: Optional[str] = None
+    created_at: str
+
 # ==================== UNABLE TO CONTACT MODELS ====================
 class UnableToContactCreate(BaseModel):
     patient_id: str
