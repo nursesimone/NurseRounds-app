@@ -56,6 +56,14 @@ export const visitsAPI = {
   delete: (visitId) => api.delete(`/visits/${visitId}`),
 };
 
+// Unable to Contact API
+export const unableToContactAPI = {
+  list: (patientId) => api.get(`/patients/${patientId}/unable-to-contact`),
+  get: (recordId) => api.get(`/unable-to-contact/${recordId}`),
+  create: (data) => api.post('/unable-to-contact', data),
+  delete: (recordId) => api.delete(`/unable-to-contact/${recordId}`),
+};
+
 // Reports API
 export const reportsAPI = {
   getMonthly: (data) => api.post('/reports/monthly', data),
