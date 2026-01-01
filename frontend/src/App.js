@@ -11,6 +11,7 @@ import NewVisitPage from './pages/NewVisitPage';
 import VisitDetailPage from './pages/VisitDetailPage';
 import ReportsPage from './pages/ReportsPage';
 import UnableToContactPage from './pages/UnableToContactPage';
+import InterventionPage from './pages/InterventionPage';
 import './App.css';
 
 // Protected Route wrapper
@@ -108,6 +109,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <UnableToContactPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/patients/:patientId/intervention" 
+        element={
+          <ProtectedRoute>
+            <InterventionPage />
           </ProtectedRoute>
         } 
       />
