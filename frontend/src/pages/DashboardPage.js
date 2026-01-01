@@ -42,12 +42,11 @@ export default function DashboardPage() {
 
   // Get visit type from session
   const visitType = sessionStorage.getItem('visitType') || 'nurse_visit';
-  const organization = sessionStorage.getItem('organization') || '';
 
   const getVisitTypeLabel = () => {
     switch (visitType) {
-      case 'nurse_visit': return 'Nurse Visit';
-      case 'vitals_only': return 'Vitals Only';
+      case 'nurse_visit': return 'Routine Nurse Visit';
+      case 'vitals_only': return 'Vital Signs Only';
       case 'daily_note': return "Resident's Daily Note";
       default: return 'Visit';
     }
@@ -125,9 +124,6 @@ export default function DashboardPage() {
                     }`}>
                       {getVisitTypeLabel()}
                     </span>
-                    {organization && (
-                      <span className="text-slate-500">• {organization}</span>
-                    )}
                   </div>
                 </div>
               </div>
