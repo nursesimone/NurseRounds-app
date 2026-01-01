@@ -535,9 +535,9 @@ async def list_patients(nurse: dict = Depends(get_current_nurse)):
     # Enrich each patient with last visit and last UTC info
     enriched_patients = []
     for p in patients:
-        # Get last visit (completed only)
+        # Get last visit (completed only, exclude daily_note as they are not visits)
         last_visit = await db.visits.find_one(
-            {"patient_id": p["id"], "status": "completed"},
+            {"patient_id": p["id"], "status": "completed", "visit_type": {"$ne": "daily_note"}},
             {"_id": 0, "visit_date": 1, "vital_signs": 1},
             sort=[("visit_date", -1)]
         )
