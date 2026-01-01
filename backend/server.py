@@ -35,6 +35,7 @@ class NurseRegister(BaseModel):
     email: EmailStr
     password: str
     full_name: str
+    title: str  # DSP, CNA, LPN, RN, BSN
     license_number: Optional[str] = None
 
 class NurseLogin(BaseModel):
@@ -45,6 +46,7 @@ class NurseResponse(BaseModel):
     id: str
     email: str
     full_name: str
+    title: str = "RN"
     license_number: Optional[str] = None
     is_admin: bool = False
     created_at: str
@@ -57,6 +59,7 @@ class NurseListResponse(BaseModel):
     id: str
     email: str
     full_name: str
+    title: str = "RN"
     license_number: Optional[str] = None
     is_admin: bool = False
 
