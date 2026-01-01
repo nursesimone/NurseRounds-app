@@ -86,6 +86,9 @@ class PatientResponse(BaseModel):
     created_at: str
     updated_at: str
     last_vitals: Optional[dict] = None
+    last_vitals_date: Optional[str] = None
+    last_visit_date: Optional[str] = None
+    last_utc: Optional[dict] = None  # last unable to contact record
 
 # ==================== VISIT MODELS ====================
 class VitalSigns(BaseModel):
