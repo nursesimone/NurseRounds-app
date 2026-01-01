@@ -114,6 +114,7 @@ class PatientResponse(BaseModel):
 
 # ==================== VISIT MODELS ====================
 class VitalSigns(BaseModel):
+    height: Optional[str] = None  # Should persist from initial visit
     weight: Optional[str] = None
     body_temperature: Optional[str] = None
     blood_pressure_systolic: Optional[str] = None
