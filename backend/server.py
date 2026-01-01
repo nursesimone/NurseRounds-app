@@ -467,14 +467,26 @@ async def assign_nurses_to_patient(patient_id: str, nurse_ids: List[str], nurse:
 # ==================== PATIENT ENDPOINTS ====================
 @api_router.post("/patients", response_model=PatientResponse)
 async def create_patient(data: PatientCreate, nurse: dict = Depends(get_current_nurse)):
+    # Only admin can create patients
+    if not nurse.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Only admin can add new patients")
+    
+    if not data.organization:
+        raise HTTPException(status_code=400, detail="Organization is required")
+    
     patient_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
+    
+    # Set organization in permanent_info
+    permanent_info = data.permanent_info.model_dump()
+    permanent_info["organization"] = data.organization
     
     patient_doc = {
         "id": patient_id,
         "full_name": data.full_name,
-        "permanent_info": data.permanent_info.model_dump(),
-        "nurse_id": nurse["id"],
+        "permanent_info": permanent_info,
+        "nurse_id": nurse["id"],  # Creator
+        "assigned_nurses": [nurse["id"]],  # Admin is auto-assigned
         "created_at": now,
         "updated_at": now,
         "last_vitals": None
@@ -484,23 +496,26 @@ async def create_patient(data: PatientCreate, nurse: dict = Depends(get_current_
     return PatientResponse(
         id=patient_id,
         full_name=data.full_name,
-        permanent_info=data.permanent_info,
+        permanent_info=PatientPermanentInfo(**permanent_info),
         nurse_id=nurse["id"],
+        assigned_nurses=[nurse["id"]],
         created_at=now,
         updated_at=now,
-        last_vitals=None
+        last_vitals=None,
+        is_assigned_to_me=True
     )
 
 @api_router.get("/patients", response_model=List[PatientResponse])
 async def list_patients(nurse: dict = Depends(get_current_nurse)):
-    patients = await db.patients.find({"nurse_id": nurse["id"]}, {"_id": 0}).to_list(1000)
+    # All nurses can see all patients, but with assignment info
+    patients = await db.patients.find({}, {"_id": 0}).to_list(1000)
     
     # Enrich each patient with last visit and last UTC info
     enriched_patients = []
     for p in patients:
-        # Get last visit
+        # Get last visit (completed only)
         last_visit = await db.visits.find_one(
-            {"patient_id": p["id"]},
+            {"patient_id": p["id"], "status": "completed"},
             {"_id": 0, "visit_date": 1, "vital_signs": 1},
             sort=[("visit_date", -1)]
         )
@@ -520,7 +535,6 @@ async def list_patients(nurse: dict = Depends(get_current_nurse)):
             utc_date = last_utc.get("attempt_date", "")
             last_visit_date = p["last_visit_date"] or ""
             if utc_date > last_visit_date:
-                # Map location to readable reason
                 location_map = {
                     "admitted": "Hospitalized",
                     "moved_temporarily": "Moved Temporarily",
@@ -538,41 +552,65 @@ async def list_patients(nurse: dict = Depends(get_current_nurse)):
         else:
             p["last_utc"] = None
         
+        # Check if current nurse is assigned
+        assigned_nurses = p.get("assigned_nurses", [])
+        p["is_assigned_to_me"] = nurse["id"] in assigned_nurses or nurse.get("is_admin", False)
+        p["assigned_nurses"] = assigned_nurses
+        
         enriched_patients.append(PatientResponse(**p))
     
     return enriched_patients
 
 @api_router.get("/patients/{patient_id}", response_model=PatientResponse)
 async def get_patient(patient_id: str, nurse: dict = Depends(get_current_nurse)):
-    patient = await db.patients.find_one({"id": patient_id, "nurse_id": nurse["id"]}, {"_id": 0})
+    patient = await db.patients.find_one({"id": patient_id}, {"_id": 0})
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
+    
+    assigned_nurses = patient.get("assigned_nurses", [])
+    patient["is_assigned_to_me"] = nurse["id"] in assigned_nurses or nurse.get("is_admin", False)
+    patient["assigned_nurses"] = assigned_nurses
+    
     return PatientResponse(**patient)
 
 @api_router.put("/patients/{patient_id}", response_model=PatientResponse)
 async def update_patient(patient_id: str, data: PatientUpdate, nurse: dict = Depends(get_current_nurse)):
-    patient = await db.patients.find_one({"id": patient_id, "nurse_id": nurse["id"]})
+    patient = await db.patients.find_one({"id": patient_id})
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # Check if nurse is assigned or is admin
+    assigned_nurses = patient.get("assigned_nurses", [])
+    if nurse["id"] not in assigned_nurses and not nurse.get("is_admin"):
+        raise HTTPException(status_code=403, detail="You are not assigned to this patient")
     
     update_data = {}
     if data.full_name:
         update_data["full_name"] = data.full_name
     if data.permanent_info:
         update_data["permanent_info"] = data.permanent_info.model_dump()
+    if data.assigned_nurses is not None and nurse.get("is_admin"):
+        update_data["assigned_nurses"] = data.assigned_nurses
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
     await db.patients.update_one({"id": patient_id}, {"$set": update_data})
     updated = await db.patients.find_one({"id": patient_id}, {"_id": 0})
+    updated["is_assigned_to_me"] = nurse["id"] in updated.get("assigned_nurses", []) or nurse.get("is_admin", False)
     return PatientResponse(**updated)
 
 @api_router.delete("/patients/{patient_id}")
 async def delete_patient(patient_id: str, nurse: dict = Depends(get_current_nurse)):
-    result = await db.patients.delete_one({"id": patient_id, "nurse_id": nurse["id"]})
+    # Only admin can delete patients
+    if not nurse.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Only admin can delete patients")
+    
+    result = await db.patients.delete_one({"id": patient_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Patient not found")
-    # Also delete all visits for this patient
+    # Also delete all visits, UTC records, and interventions for this patient
     await db.visits.delete_many({"patient_id": patient_id})
+    await db.unable_to_contact.delete_many({"patient_id": patient_id})
+    await db.interventions.delete_many({"patient_id": patient_id})
     return {"message": "Patient deleted successfully"}
 
 # ==================== VISIT ENDPOINTS ====================
