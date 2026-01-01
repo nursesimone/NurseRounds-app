@@ -650,6 +650,87 @@ async def delete_unable_to_contact(record_id: str, nurse: dict = Depends(get_cur
         raise HTTPException(status_code=404, detail="Record not found")
     return {"message": "Record deleted successfully"}
 
+# ==================== INTERVENTION ENDPOINTS ====================
+@api_router.post("/interventions", response_model=InterventionResponse)
+async def create_intervention(data: InterventionCreate, nurse: dict = Depends(get_current_nurse)):
+    # Verify patient exists and belongs to nurse
+    patient = await db.patients.find_one({"id": data.patient_id, "nurse_id": nurse["id"]})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    intervention_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    intervention_doc = {
+        "id": intervention_id,
+        "patient_id": data.patient_id,
+        "nurse_id": nurse["id"],
+        "intervention_date": data.intervention_date,
+        "location": data.location,
+        "body_temperature": data.body_temperature,
+        "mood_scale": data.mood_scale,
+        "intervention_type": data.intervention_type,
+        "injection_details": data.injection_details.model_dump() if data.injection_details else None,
+        "test_details": data.test_details.model_dump() if data.test_details else None,
+        "treatment_details": data.treatment_details.model_dump() if data.treatment_details else None,
+        "procedure_details": data.procedure_details.model_dump() if data.procedure_details else None,
+        "verified_patient_identity": data.verified_patient_identity,
+        "donned_proper_ppe": data.donned_proper_ppe,
+        "notes": data.notes,
+        "created_at": now
+    }
+    await db.interventions.insert_one(intervention_doc)
+    
+    return InterventionResponse(
+        id=intervention_id,
+        patient_id=data.patient_id,
+        patient_name=patient.get("full_name"),
+        patient_dob=patient.get("permanent_info", {}).get("date_of_birth"),
+        nurse_id=nurse["id"],
+        intervention_date=data.intervention_date,
+        location=data.location,
+        body_temperature=data.body_temperature,
+        mood_scale=data.mood_scale,
+        intervention_type=data.intervention_type,
+        injection_details=data.injection_details.model_dump() if data.injection_details else None,
+        test_details=data.test_details.model_dump() if data.test_details else None,
+        treatment_details=data.treatment_details.model_dump() if data.treatment_details else None,
+        procedure_details=data.procedure_details.model_dump() if data.procedure_details else None,
+        verified_patient_identity=data.verified_patient_identity,
+        donned_proper_ppe=data.donned_proper_ppe,
+        notes=data.notes,
+        created_at=now
+    )
+
+@api_router.get("/patients/{patient_id}/interventions", response_model=List[InterventionResponse])
+async def list_interventions(patient_id: str, nurse: dict = Depends(get_current_nurse)):
+    patient = await db.patients.find_one({"id": patient_id, "nurse_id": nurse["id"]})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    interventions = await db.interventions.find({"patient_id": patient_id}, {"_id": 0}).sort("intervention_date", -1).to_list(1000)
+    for i in interventions:
+        i["patient_name"] = patient.get("full_name")
+        i["patient_dob"] = patient.get("permanent_info", {}).get("date_of_birth")
+    return [InterventionResponse(**i) for i in interventions]
+
+@api_router.get("/interventions/{intervention_id}", response_model=InterventionResponse)
+async def get_intervention(intervention_id: str, nurse: dict = Depends(get_current_nurse)):
+    intervention = await db.interventions.find_one({"id": intervention_id, "nurse_id": nurse["id"]}, {"_id": 0})
+    if not intervention:
+        raise HTTPException(status_code=404, detail="Intervention not found")
+    patient = await db.patients.find_one({"id": intervention["patient_id"]}, {"_id": 0})
+    intervention["patient_name"] = patient.get("full_name") if patient else "Unknown"
+    intervention["patient_dob"] = patient.get("permanent_info", {}).get("date_of_birth") if patient else None
+    return InterventionResponse(**intervention)
+
+@api_router.delete("/interventions/{intervention_id}")
+async def delete_intervention(intervention_id: str, nurse: dict = Depends(get_current_nurse)):
+    result = await db.interventions.delete_one({"id": intervention_id, "nurse_id": nurse["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Intervention not found")
+    return {"message": "Intervention deleted successfully"}
+
 # ==================== MONTHLY REPORTS ====================
 class MonthlyReportRequest(BaseModel):
     year: int
