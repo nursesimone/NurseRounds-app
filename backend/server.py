@@ -330,9 +330,14 @@ class UnableToContactCreate(BaseModel):
     spoke_with_whom: Optional[str] = None
     individual_location: str  # admitted, moved_temporarily, moved_permanently, vacation, deceased, other
     individual_location_other: Optional[str] = None
-    expected_return_date: Optional[str] = None
+    # Medical facility details (if admitted)
+    facility_name: Optional[str] = None
+    facility_city: Optional[str] = None
+    facility_state: Optional[str] = None
     admission_date: Optional[str] = None
     admission_reason: Optional[str] = None
+    # Expected return - available for all absence types
+    expected_return_date: Optional[str] = None
     additional_info: Optional[str] = None
 
 class UnableToContactResponse(BaseModel):
@@ -349,9 +354,12 @@ class UnableToContactResponse(BaseModel):
     spoke_with_whom: Optional[str] = None
     individual_location: str
     individual_location_other: Optional[str] = None
-    expected_return_date: Optional[str] = None
+    facility_name: Optional[str] = None
+    facility_city: Optional[str] = None
+    facility_state: Optional[str] = None
     admission_date: Optional[str] = None
     admission_reason: Optional[str] = None
+    expected_return_date: Optional[str] = None
     additional_info: Optional[str] = None
     created_at: str
 
