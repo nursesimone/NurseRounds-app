@@ -164,7 +164,7 @@ export default function PatientDetailPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Patient Header */}
         <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 bg-teal-50 rounded-2xl flex items-center justify-center">
                 <User className="w-10 h-10 text-teal-700" />
@@ -197,16 +197,7 @@ export default function PatientDetailPage() {
                 </div>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Button 
-                variant="outline"
-                className="h-12 px-6 border-amber-300 text-amber-700 hover:bg-amber-50"
-                onClick={() => navigate(`/patients/${patientId}/unable-to-contact`)}
-                data-testid="unable-to-contact-btn"
-              >
-                <PhoneOff className="w-5 h-5 mr-2" />
-                Unable to Contact
-              </Button>
+            <div className="flex flex-col gap-2 items-end">
               <Button 
                 className="bg-teal-700 hover:bg-teal-600 h-12 px-6"
                 onClick={() => navigate(`/patients/${patientId}/new-visit`)}
@@ -214,6 +205,16 @@ export default function PatientDetailPage() {
               >
                 <Plus className="w-5 h-5 mr-2" />
                 New Visit
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                className="text-amber-700 border-amber-300 hover:bg-amber-50"
+                onClick={() => navigate(`/patients/${patientId}/unable-to-contact`)}
+                data-testid="unable-to-contact-btn"
+              >
+                <PhoneOff className="w-4 h-4 mr-2" />
+                Unable to Contact
               </Button>
             </div>
           </div>
