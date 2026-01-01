@@ -172,6 +172,12 @@ export default function PatientDetailPage() {
               <div>
                 <h1 className="text-3xl font-bold text-slate-900">{patient.full_name}</h1>
                 <div className="flex flex-wrap items-center gap-3 mt-2 text-slate-500">
+                  {patient.permanent_info?.organization && (
+                    <span className="flex items-center gap-1 bg-teal-50 text-teal-700 px-2 py-1 rounded text-sm">
+                      <Building2 className="w-4 h-4" />
+                      {patient.permanent_info.organization}
+                    </span>
+                  )}
                   {patient.permanent_info?.date_of_birth && (
                     <span className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
@@ -184,21 +190,32 @@ export default function PatientDetailPage() {
                     </span>
                   )}
                   {patient.permanent_info?.visit_frequency && (
-                    <span className="bg-teal-50 text-teal-700 px-2 py-1 rounded text-sm">
+                    <span className="bg-slate-100 px-2 py-1 rounded text-sm">
                       {patient.permanent_info.visit_frequency}
                     </span>
                   )}
                 </div>
               </div>
             </div>
-            <Button 
-              className="bg-teal-700 hover:bg-teal-600 h-12 px-6"
-              onClick={() => navigate(`/patients/${patientId}/new-visit`)}
-              data-testid="new-visit-btn"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              New Visit
-            </Button>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline"
+                className="h-12 px-6 border-amber-300 text-amber-700 hover:bg-amber-50"
+                onClick={() => navigate(`/patients/${patientId}/unable-to-contact`)}
+                data-testid="unable-to-contact-btn"
+              >
+                <PhoneOff className="w-5 h-5 mr-2" />
+                Unable to Contact
+              </Button>
+              <Button 
+                className="bg-teal-700 hover:bg-teal-600 h-12 px-6"
+                onClick={() => navigate(`/patients/${patientId}/new-visit`)}
+                data-testid="new-visit-btn"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                New Visit
+              </Button>
+            </div>
           </div>
         </div>
 
