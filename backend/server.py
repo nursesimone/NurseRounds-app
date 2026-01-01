@@ -365,13 +365,19 @@ async def register(data: NurseRegister):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    # Check if this is the first user - make them admin
+    nurse_count = await db.nurses.count_documents({})
+    is_admin = nurse_count == 0
+    
     nurse_id = str(uuid.uuid4())
     nurse_doc = {
         "id": nurse_id,
         "email": data.email,
         "password_hash": hash_password(data.password),
         "full_name": data.full_name,
+        "title": data.title,
         "license_number": data.license_number,
+        "is_admin": is_admin,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.nurses.insert_one(nurse_doc)
@@ -383,7 +389,9 @@ async def register(data: NurseRegister):
             id=nurse_id,
             email=data.email,
             full_name=data.full_name,
+            title=data.title,
             license_number=data.license_number,
+            is_admin=is_admin,
             created_at=nurse_doc["created_at"]
         )
     )
@@ -401,7 +409,9 @@ async def login(data: NurseLogin):
             id=nurse["id"],
             email=nurse["email"],
             full_name=nurse["full_name"],
+            title=nurse.get("title", "RN"),
             license_number=nurse.get("license_number"),
+            is_admin=nurse.get("is_admin", False),
             created_at=nurse["created_at"]
         )
     )
@@ -412,9 +422,43 @@ async def get_me(nurse: dict = Depends(get_current_nurse)):
         id=nurse["id"],
         email=nurse["email"],
         full_name=nurse["full_name"],
+        title=nurse.get("title", "RN"),
         license_number=nurse.get("license_number"),
+        is_admin=nurse.get("is_admin", False),
         created_at=nurse["created_at"]
     )
+
+# ==================== ADMIN ENDPOINTS ====================
+@api_router.get("/admin/nurses", response_model=List[NurseListResponse])
+async def list_all_nurses(nurse: dict = Depends(get_current_nurse)):
+    if not nurse.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    nurses = await db.nurses.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
+    return [NurseListResponse(**n) for n in nurses]
+
+@api_router.post("/admin/nurses/{nurse_id}/promote")
+async def promote_to_admin(nurse_id: str, nurse: dict = Depends(get_current_nurse)):
+    if not nurse.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    result = await db.nurses.update_one({"id": nurse_id}, {"$set": {"is_admin": True}})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Nurse not found")
+    return {"message": "Nurse promoted to admin"}
+
+@api_router.post("/admin/patients/{patient_id}/assign")
+async def assign_nurses_to_patient(patient_id: str, nurse_ids: List[str], nurse: dict = Depends(get_current_nurse)):
+    if not nurse.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    result = await db.patients.update_one(
+        {"id": patient_id},
+        {"$set": {"assigned_nurses": nurse_ids}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    return {"message": "Nurses assigned successfully"}
 
 # ==================== PATIENT ENDPOINTS ====================
 @api_router.post("/patients", response_model=PatientResponse)
