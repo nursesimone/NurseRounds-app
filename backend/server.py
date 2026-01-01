@@ -66,17 +66,24 @@ class NurseListResponse(BaseModel):
 # ==================== PATIENT MODELS ====================
 class PatientPermanentInfo(BaseModel):
     organization: Optional[str] = None  # POSH-Able Living, Ebenezer Private HomeCare, or custom - REQUIRED first field
-    race: Optional[str] = None
-    gender: Optional[str] = None
-    height: Optional[str] = None
+    # Mandatory fields
+    gender: Optional[str] = None  # MANDATORY
+    date_of_birth: Optional[str] = None  # MANDATORY
+    # Living situation
+    living_situation: Optional[str] = None  # private_home, host_home, group_home, personal_care_home, other
+    living_situation_other: Optional[str] = None
     home_address: Optional[str] = None
-    caregiver_name: Optional[str] = None
-    caregiver_phone: Optional[str] = None
-    date_of_birth: Optional[str] = None
-    medications: Optional[List[str]] = []
-    allergies: Optional[List[str]] = []
+    # Adult Day Program
+    attends_adult_day_program: Optional[bool] = False
     adult_day_program_name: Optional[str] = None
     adult_day_program_address: Optional[str] = None
+    # Other info
+    race: Optional[str] = None
+    height: Optional[str] = None
+    caregiver_name: Optional[str] = None
+    caregiver_phone: Optional[str] = None
+    medications: Optional[List[str]] = []
+    allergies: Optional[List[str]] = []
     medical_diagnoses: Optional[List[str]] = []
     psychiatric_diagnoses: Optional[List[str]] = []
     visit_frequency: Optional[str] = None
@@ -116,21 +123,34 @@ class VitalSigns(BaseModel):
     respirations: Optional[str] = None
     repeat_blood_pressure_systolic: Optional[str] = None
     repeat_blood_pressure_diastolic: Optional[str] = None
-    bp_abnormal: Optional[bool] = False
+    bp_abnormal: Optional[bool] = False  # sys >= 140 or dia >= 90 or sys < 90 or dia < 60
 
 class PhysicalAssessment(BaseModel):
     general_appearance: Optional[str] = None
+    general_appearance_from_last: Optional[bool] = False  # Pull from last visit
     skin_assessment: Optional[str] = None
-    mobility_level: Optional[str] = None
-    speech_level: Optional[str] = None
+    skin_assessment_from_last: Optional[bool] = False
+    mobility_level: Optional[str] = None  # ambulatory, supervised, with_assistance, wheelchair, paralyzed, non_ambulatory
+    mobility_level_from_last: Optional[bool] = False
+    speech_level: Optional[str] = None  # clear_coherent_verbal, slurred, impaired, non_verbal, asl_sign, speech_impediment
+    speech_level_from_last: Optional[bool] = False
     alert_oriented_level: Optional[str] = None  # 0-4
+    alert_oriented_level_from_last: Optional[bool] = False
+    # Gait monitoring
+    gait_status: Optional[str] = None  # no_falls, uneventful_falls, eventful_falls
+    fall_incidence_since_last_visit: Optional[str] = None
 
 class HeadToToeAssessment(BaseModel):
     head_neck: Optional[str] = None
+    head_neck_from_last: Optional[bool] = False
     eyes_vision: Optional[str] = None
+    eyes_vision_from_last: Optional[bool] = False
     ears_hearing: Optional[str] = None
+    ears_hearing_from_last: Optional[bool] = False
     nose_nasal_cavity: Optional[str] = None
+    nose_nasal_cavity_from_last: Optional[bool] = False
     mouth_teeth_oral_cavity: Optional[str] = None
+    mouth_teeth_oral_cavity_from_last: Optional[bool] = False
 
 class GastrointestinalAssessment(BaseModel):
     last_bowel_movement: Optional[str] = None
@@ -148,6 +168,8 @@ class EndocrineAssessment(BaseModel):
     is_diabetic: Optional[bool] = False
     diabetic_notes: Optional[str] = None
     blood_sugar: Optional[str] = None
+    blood_sugar_date: Optional[str] = None  # Date of reading
+    blood_sugar_time_of_day: Optional[str] = None  # AM or PM
 
 class ChangesSinceLastVisit(BaseModel):
     medication_changes: Optional[str] = None
