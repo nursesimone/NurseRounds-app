@@ -170,6 +170,8 @@ class VisitCreate(BaseModel):
     overall_health_status: Optional[str] = None  # stable, unstable, deteriorating, needs immediate attention
     nurse_notes: Optional[str] = None
     daily_note_content: Optional[str] = None  # For daily notes
+    status: str = "completed"  # draft or completed
+    attachments: Optional[List[str]] = []  # List of file IDs
 
 class VisitResponse(BaseModel):
     id: str
@@ -189,6 +191,8 @@ class VisitResponse(BaseModel):
     overall_health_status: Optional[str] = None
     nurse_notes: Optional[str] = None
     daily_note_content: Optional[str] = None
+    status: str = "completed"  # draft or completed
+    attachments: List[str] = []
     created_at: str
 
 # ==================== INTERVENTION MODELS ====================
