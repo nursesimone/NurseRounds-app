@@ -26,7 +26,9 @@ import {
   User,
   ChevronRight,
   ClipboardList,
-  ArrowLeft
+  ArrowLeft,
+  PhoneOff,
+  Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
 
