@@ -54,6 +54,7 @@ class TokenResponse(BaseModel):
 
 # ==================== PATIENT MODELS ====================
 class PatientPermanentInfo(BaseModel):
+    organization: Optional[str] = None  # POSH-Able Living, Ebenezer Private HomeCare, or custom
     race: Optional[str] = None
     gender: Optional[str] = None
     height: Optional[str] = None
@@ -170,6 +171,43 @@ class VisitResponse(BaseModel):
     overall_health_status: Optional[str] = None
     nurse_notes: Optional[str] = None
     daily_note_content: Optional[str] = None
+    created_at: str
+
+# ==================== UNABLE TO CONTACT MODELS ====================
+class UnableToContactCreate(BaseModel):
+    patient_id: str
+    visit_type: str  # nurse_visit, vitals_only, daily_note - prefilled reason
+    attempt_date: str
+    attempt_time: Optional[str] = None
+    attempt_location: str  # home, day_program, telephone, virtual, other
+    attempt_location_other: Optional[str] = None
+    spoke_with_anyone: Optional[bool] = False
+    spoke_with_whom: Optional[str] = None
+    individual_location: str  # admitted, moved_temporarily, moved_permanently, vacation, deceased, other
+    individual_location_other: Optional[str] = None
+    expected_return_date: Optional[str] = None
+    admission_date: Optional[str] = None
+    admission_reason: Optional[str] = None
+    additional_info: Optional[str] = None
+
+class UnableToContactResponse(BaseModel):
+    id: str
+    patient_id: str
+    patient_name: Optional[str] = None
+    nurse_id: str
+    visit_type: str
+    attempt_date: str
+    attempt_time: Optional[str] = None
+    attempt_location: str
+    attempt_location_other: Optional[str] = None
+    spoke_with_anyone: Optional[bool] = False
+    spoke_with_whom: Optional[str] = None
+    individual_location: str
+    individual_location_other: Optional[str] = None
+    expected_return_date: Optional[str] = None
+    admission_date: Optional[str] = None
+    admission_reason: Optional[str] = None
+    additional_info: Optional[str] = None
     created_at: str
 
 # ==================== AUTH HELPERS ====================
