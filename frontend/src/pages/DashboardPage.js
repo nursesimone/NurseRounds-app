@@ -309,15 +309,29 @@ export default function DashboardPage() {
                             </>
                           )}
                           <span>{patient.permanent_info?.gender || 'Unknown'}</span>
+                          {patient.permanent_info?.race && (
+                            <>
+                              <span>•</span>
+                              <span>{patient.permanent_info.race}</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-slate-400" />
                   </div>
                   
+                  {/* Last Vitals with Date */}
                   {patient.last_vitals && (
                     <div className="mt-4 pt-4 border-t border-slate-100">
-                      <p className="text-xs text-slate-500 mb-2">Last Vitals</p>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-slate-500">Last Vitals</p>
+                        {patient.last_vitals_date && (
+                          <p className="text-xs text-slate-400 font-mono">
+                            {formatDate(patient.last_vitals_date)}
+                          </p>
+                        )}
+                      </div>
                       <div className="flex flex-wrap gap-2 text-xs">
                         {patient.last_vitals.blood_pressure_systolic && (
                           <span className="bg-slate-100 px-2 py-1 rounded font-mono">
@@ -338,7 +352,31 @@ export default function DashboardPage() {
                     </div>
                   )}
                   
-                  <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
+                  {/* Visit History Summary */}
+                  <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
+                    {/* Last Visit */}
+                    {patient.last_visit_date && (
+                      <div className="flex items-center gap-2 text-xs">
+                        <Clock className="w-3 h-3 text-teal-600" />
+                        <span className="text-slate-600">
+                          LV: <span className="font-medium">{formatDate(patient.last_visit_date)}</span>
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Last Unable to Contact - only if after last visit */}
+                    {patient.last_utc && (
+                      <div className="flex items-center gap-2 text-xs">
+                        <PhoneOff className="w-3 h-3 text-amber-600" />
+                        <span className="text-amber-700">
+                          UTC: <span className="font-medium">{formatDate(patient.last_utc.date)}</span>
+                          <span className="ml-1 text-amber-600">({patient.last_utc.reason})</span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       Added {formatDate(patient.created_at)}
