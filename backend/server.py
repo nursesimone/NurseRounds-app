@@ -449,6 +449,86 @@ async def delete_visit(visit_id: str, nurse: dict = Depends(get_current_nurse)):
         raise HTTPException(status_code=404, detail="Visit not found")
     return {"message": "Visit deleted successfully"}
 
+# ==================== UNABLE TO CONTACT ENDPOINTS ====================
+@api_router.post("/unable-to-contact", response_model=UnableToContactResponse)
+async def create_unable_to_contact(data: UnableToContactCreate, nurse: dict = Depends(get_current_nurse)):
+    # Verify patient exists and belongs to nurse
+    patient = await db.patients.find_one({"id": data.patient_id, "nurse_id": nurse["id"]})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    record_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    record_doc = {
+        "id": record_id,
+        "patient_id": data.patient_id,
+        "nurse_id": nurse["id"],
+        "visit_type": data.visit_type,
+        "attempt_date": data.attempt_date,
+        "attempt_time": data.attempt_time,
+        "attempt_location": data.attempt_location,
+        "attempt_location_other": data.attempt_location_other,
+        "spoke_with_anyone": data.spoke_with_anyone,
+        "spoke_with_whom": data.spoke_with_whom,
+        "individual_location": data.individual_location,
+        "individual_location_other": data.individual_location_other,
+        "expected_return_date": data.expected_return_date,
+        "admission_date": data.admission_date,
+        "admission_reason": data.admission_reason,
+        "additional_info": data.additional_info,
+        "created_at": now
+    }
+    await db.unable_to_contact.insert_one(record_doc)
+    
+    return UnableToContactResponse(
+        id=record_id,
+        patient_id=data.patient_id,
+        patient_name=patient.get("full_name"),
+        nurse_id=nurse["id"],
+        visit_type=data.visit_type,
+        attempt_date=data.attempt_date,
+        attempt_time=data.attempt_time,
+        attempt_location=data.attempt_location,
+        attempt_location_other=data.attempt_location_other,
+        spoke_with_anyone=data.spoke_with_anyone,
+        spoke_with_whom=data.spoke_with_whom,
+        individual_location=data.individual_location,
+        individual_location_other=data.individual_location_other,
+        expected_return_date=data.expected_return_date,
+        admission_date=data.admission_date,
+        admission_reason=data.admission_reason,
+        additional_info=data.additional_info,
+        created_at=now
+    )
+
+@api_router.get("/patients/{patient_id}/unable-to-contact", response_model=List[UnableToContactResponse])
+async def list_unable_to_contact(patient_id: str, nurse: dict = Depends(get_current_nurse)):
+    patient = await db.patients.find_one({"id": patient_id, "nurse_id": nurse["id"]})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    records = await db.unable_to_contact.find({"patient_id": patient_id}, {"_id": 0}).sort("attempt_date", -1).to_list(1000)
+    for r in records:
+        r["patient_name"] = patient.get("full_name")
+    return [UnableToContactResponse(**r) for r in records]
+
+@api_router.get("/unable-to-contact/{record_id}", response_model=UnableToContactResponse)
+async def get_unable_to_contact(record_id: str, nurse: dict = Depends(get_current_nurse)):
+    record = await db.unable_to_contact.find_one({"id": record_id, "nurse_id": nurse["id"]}, {"_id": 0})
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+    patient = await db.patients.find_one({"id": record["patient_id"]}, {"_id": 0})
+    record["patient_name"] = patient.get("full_name") if patient else "Unknown"
+    return UnableToContactResponse(**record)
+
+@api_router.delete("/unable-to-contact/{record_id}")
+async def delete_unable_to_contact(record_id: str, nurse: dict = Depends(get_current_nurse)):
+    result = await db.unable_to_contact.delete_one({"id": record_id, "nurse_id": nurse["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Record not found")
+    return {"message": "Record deleted successfully"}
+
 # ==================== MONTHLY REPORTS ====================
 class MonthlyReportRequest(BaseModel):
     year: int
