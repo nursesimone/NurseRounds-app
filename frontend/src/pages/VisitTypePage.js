@@ -46,6 +46,12 @@ export default function VisitTypePage() {
       icon: Stethoscope
     },
     {
+      id: 'patient_intervention',
+      title: 'Patient Intervention',
+      description: 'Injections, tests, treatments, and procedures',
+      icon: Syringe
+    },
+    {
       id: 'vitals_only',
       title: 'Vital Signs ONLY',
       description: 'Quick vital signs check without full assessment',
@@ -56,12 +62,6 @@ export default function VisitTypePage() {
       title: "Resident's Daily Note",
       description: 'Daily observation and notes for resident',
       icon: FileText
-    },
-    {
-      id: 'patient_intervention',
-      title: 'Patient Intervention',
-      description: 'Injections, tests, treatments, and procedures',
-      icon: Syringe
     }
   ];
 
