@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { patientsAPI, visitsAPI } from '../lib/api';
+import { patientsAPI, visitsAPI, unableToContactAPI } from '../lib/api';
 import { formatDate, formatDateTime, calculateAge, getHealthStatusColor } from '../lib/utils';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -35,7 +35,9 @@ import {
   Plus,
   FileText,
   Trash2,
-  Clock
+  Clock,
+  PhoneOff,
+  Building2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -44,11 +46,13 @@ export default function PatientDetailPage() {
   const navigate = useNavigate();
   const [patient, setPatient] = useState(null);
   const [visits, setVisits] = useState([]);
+  const [unableToContactRecords, setUnableToContactRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({});
   const [savingProfile, setSavingProfile] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [customOrganization, setCustomOrganization] = useState('');
 
   useEffect(() => {
     fetchPatientData();
@@ -56,13 +60,20 @@ export default function PatientDetailPage() {
 
   const fetchPatientData = async () => {
     try {
-      const [patientRes, visitsRes] = await Promise.all([
+      const [patientRes, visitsRes, utcRes] = await Promise.all([
         patientsAPI.get(patientId),
-        visitsAPI.list(patientId)
+        visitsAPI.list(patientId),
+        unableToContactAPI.list(patientId)
       ]);
       setPatient(patientRes.data);
       setProfileData(patientRes.data.permanent_info || {});
       setVisits(visitsRes.data);
+      setUnableToContactRecords(utcRes.data);
+      // Check if organization is custom (not one of the presets)
+      const org = patientRes.data.permanent_info?.organization;
+      if (org && org !== 'POSH-Able Living' && org !== 'Ebenezer Private HomeCare') {
+        setCustomOrganization(org);
+      }
     } catch (error) {
       toast.error('Failed to load patient data');
       navigate('/dashboard');
