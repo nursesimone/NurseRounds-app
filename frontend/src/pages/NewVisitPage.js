@@ -311,12 +311,12 @@ export default function NewVisitPage() {
                     {getVisitTypeLabel()}
                   </div>
                 </div>
-                {organization && (
+                {visitData.organization && (
                   <div>
                     <Label>Organization</Label>
                     <div className="mt-1 h-11 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-slate-500" />
-                      {organization}
+                      {visitData.organization}
                     </div>
                   </div>
                 )}
