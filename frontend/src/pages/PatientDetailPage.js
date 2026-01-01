@@ -273,9 +273,72 @@ export default function PatientDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Basic Info */}
+                  {/* Organization & Basic Info */}
                   <div className="space-y-4">
                     <h3 className="font-medium text-slate-700 flex items-center gap-2">
+                      <Building2 className="w-4 h-4" />
+                      Organization
+                    </h3>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-slate-500">Which organization should this patient be added to?</Label>
+                        {editingProfile ? (
+                          <div className="space-y-2 mt-1">
+                            <Select
+                              value={
+                                profileData.organization === 'POSH-Able Living' || 
+                                profileData.organization === 'Ebenezer Private HomeCare' 
+                                  ? profileData.organization 
+                                  : profileData.organization ? 'Other' : ''
+                              }
+                              onValueChange={(value) => {
+                                if (value === 'Other') {
+                                  handleProfileChange('organization', customOrganization || '');
+                                } else {
+                                  handleProfileChange('organization', value);
+                                  setCustomOrganization('');
+                                }
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select organization" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="POSH-Able Living">POSH-Able Living</SelectItem>
+                                <SelectItem value="Ebenezer Private HomeCare">Ebenezer Private HomeCare</SelectItem>
+                                <SelectItem value="Other">Other (Enter custom name)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {(profileData.organization && 
+                              profileData.organization !== 'POSH-Able Living' && 
+                              profileData.organization !== 'Ebenezer Private HomeCare') && (
+                              <Input
+                                value={profileData.organization || ''}
+                                onChange={(e) => {
+                                  handleProfileChange('organization', e.target.value);
+                                  setCustomOrganization(e.target.value);
+                                }}
+                                placeholder="Enter organization name"
+                              />
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-slate-900 flex items-center gap-2">
+                            {profileData.organization ? (
+                              <>
+                                <Building2 className="w-4 h-4 text-teal-600" />
+                                {profileData.organization}
+                              </>
+                            ) : (
+                              'Not set'
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <h3 className="font-medium text-slate-700 flex items-center gap-2 pt-4 border-t border-slate-100">
                       <User className="w-4 h-4" />
                       Basic Information
                     </h3>
