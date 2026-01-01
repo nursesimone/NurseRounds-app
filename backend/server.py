@@ -331,7 +331,53 @@ async def create_patient(data: PatientCreate, nurse: dict = Depends(get_current_
 @api_router.get("/patients", response_model=List[PatientResponse])
 async def list_patients(nurse: dict = Depends(get_current_nurse)):
     patients = await db.patients.find({"nurse_id": nurse["id"]}, {"_id": 0}).to_list(1000)
-    return [PatientResponse(**p) for p in patients]
+    
+    # Enrich each patient with last visit and last UTC info
+    enriched_patients = []
+    for p in patients:
+        # Get last visit
+        last_visit = await db.visits.find_one(
+            {"patient_id": p["id"]},
+            {"_id": 0, "visit_date": 1, "vital_signs": 1},
+            sort=[("visit_date", -1)]
+        )
+        
+        # Get last UTC record
+        last_utc = await db.unable_to_contact.find_one(
+            {"patient_id": p["id"]},
+            {"_id": 0, "attempt_date": 1, "individual_location": 1, "individual_location_other": 1},
+            sort=[("attempt_date", -1)]
+        )
+        
+        p["last_visit_date"] = last_visit.get("visit_date") if last_visit else None
+        p["last_vitals_date"] = last_visit.get("visit_date") if last_visit else None
+        
+        # Only include UTC if it's after the last visit
+        if last_utc:
+            utc_date = last_utc.get("attempt_date", "")
+            last_visit_date = p["last_visit_date"] or ""
+            if utc_date > last_visit_date:
+                # Map location to readable reason
+                location_map = {
+                    "admitted": "Hospitalized",
+                    "moved_temporarily": "Moved Temporarily",
+                    "moved_permanently": "Moved Permanently",
+                    "vacation": "On Vacation",
+                    "deceased": "Deceased",
+                    "other": last_utc.get("individual_location_other", "Other")
+                }
+                p["last_utc"] = {
+                    "date": utc_date,
+                    "reason": location_map.get(last_utc.get("individual_location"), "Unknown")
+                }
+            else:
+                p["last_utc"] = None
+        else:
+            p["last_utc"] = None
+        
+        enriched_patients.append(PatientResponse(**p))
+    
+    return enriched_patients
 
 @api_router.get("/patients/{patient_id}", response_model=PatientResponse)
 async def get_patient(patient_id: str, nurse: dict = Depends(get_current_nurse)):
